@@ -5,6 +5,9 @@
 // Configuration
 const API_BASE = 'tables';
 
+// Import API configuration
+// Note: This will be dynamically loaded in the HTML files
+
 // Demo accounts
 const DEMO_ACCOUNTS = {
     admin: {
@@ -97,7 +100,10 @@ async function loginAsDemo(role) {
     setTimeout(async () => {
         try {
             // Check if demo user exists in database
-            const response = await fetch(`${API_BASE}/users?search=${demoAccount.email}`);
+            const url = window.buildUrl ? 
+                window.buildUrl('users', null, {search: demoAccount.email}) : 
+                `${API_BASE}/users?search=${demoAccount.email}`;
+            const response = await fetch(url);
             const data = await response.json();
             
             let userId;
@@ -107,7 +113,10 @@ async function loginAsDemo(role) {
                 userId = data.data[0].id;
             } else {
                 // Create demo user
-                const createResponse = await fetch(`${API_BASE}/users`, {
+                const createUserUrl = window.buildUrl ? 
+                    window.buildUrl('users') : 
+                    `${API_BASE}/users`;
+                const createResponse = await fetch(createUserUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -124,7 +133,7 @@ async function loginAsDemo(role) {
                 });
                 
                 const createdUser = await createResponse.json();
-                userId = createdUser.id;
+                userId = createdUser.id || createdUser.insertId; // Handle both API formats
             }
             
             // Save session
@@ -166,7 +175,10 @@ if (document.getElementById('loginForm')) {
         
         try {
             // Search for user by email
-            const response = await fetch(`${API_BASE}/users?search=${email}`);
+            const url = window.buildUrl ? 
+                window.buildUrl('users', null, {search: email}) : 
+                `${API_BASE}/users?search=${email}`;
+            const response = await fetch(url);
             const data = await response.json();
             
             if (data.data && data.data.length > 0) {
@@ -236,7 +248,10 @@ if (document.getElementById('registerForm')) {
         
         try {
             // Check if email already exists
-            const checkResponse = await fetch(`${API_BASE}/users?search=${formData.email}`);
+            const checkUrl = window.buildUrl ? 
+                window.buildUrl('users', null, {search: formData.email}) : 
+                `${API_BASE}/users?search=${formData.email}`;
+            const checkResponse = await fetch(checkUrl);
             const checkData = await checkResponse.json();
             
             if (checkData.data && checkData.data.length > 0) {
@@ -245,7 +260,10 @@ if (document.getElementById('registerForm')) {
             }
             
             // Create new user
-            const response = await fetch(`${API_BASE}/users`, {
+            const createUserUrl = window.buildUrl ? 
+                window.buildUrl('users') : 
+                `${API_BASE}/users`;
+            const response = await fetch(createUserUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -260,7 +278,7 @@ if (document.getElementById('registerForm')) {
                 
                 // Auto-login
                 saveUserSession({
-                    id: user.id,
+                    id: user.id || user.insertId, // Handle both API formats
                     email: formData.email,
                     nom: formData.nom,
                     prenom: formData.prenom,

@@ -78,8 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // API Helper Functions
 const API = {
     async get(table, params = {}) {
-        const queryString = new URLSearchParams(params).toString();
-        const url = `tables/${table}${queryString ? '?' + queryString : ''}`;
+        // Use the new buildUrl function if available
+        let url;
+        if (typeof window.buildUrl === 'function') {
+            url = window.buildUrl(table, null, params);
+        } else {
+            const queryString = new URLSearchParams(params).toString();
+            url = `tables/${table}${queryString ? '?' + queryString : ''}`;
+        }
         
         try {
             const response = await fetch(url);
@@ -92,8 +98,13 @@ const API = {
     },
     
     async getById(table, id) {
+        // Use the new buildUrl function if available
+        const url = typeof window.buildUrl === 'function' ? 
+            window.buildUrl(table, id) : 
+            `tables/${table}/${id}`;
+        
         try {
-            const response = await fetch(`tables/${table}/${id}`);
+            const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return await response.json();
         } catch (error) {
@@ -103,8 +114,13 @@ const API = {
     },
     
     async create(table, data) {
+        // Use the new buildUrl function if available
+        const url = typeof window.buildUrl === 'function' ? 
+            window.buildUrl(table) : 
+            `tables/${table}`;
+        
         try {
-            const response = await fetch(`tables/${table}`, {
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -120,8 +136,13 @@ const API = {
     },
     
     async update(table, id, data) {
+        // Use the new buildUrl function if available
+        const url = typeof window.buildUrl === 'function' ? 
+            window.buildUrl(table, id) : 
+            `tables/${table}/${id}`;
+        
         try {
-            const response = await fetch(`tables/${table}/${id}`, {
+            const response = await fetch(url, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -137,8 +158,13 @@ const API = {
     },
     
     async patch(table, id, data) {
+        // Use the new buildUrl function if available
+        const url = typeof window.buildUrl === 'function' ? 
+            window.buildUrl(table, id) : 
+            `tables/${table}/${id}`;
+        
         try {
-            const response = await fetch(`tables/${table}/${id}`, {
+            const response = await fetch(url, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -154,8 +180,13 @@ const API = {
     },
     
     async delete(table, id) {
+        // Use the new buildUrl function if available
+        const url = typeof window.buildUrl === 'function' ? 
+            window.buildUrl(table, id) : 
+            `tables/${table}/${id}`;
+        
         try {
-            const response = await fetch(`tables/${table}/${id}`, {
+            const response = await fetch(url, {
                 method: 'DELETE'
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
