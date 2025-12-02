@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - Hope Gestion Immobilière</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-left">
+            <div class="auth-brand">
+                <i class="fas fa-home-heart"></i>
+                <span>Hope Gestion <span class="highlight">Immobilière</span></span>
+            </div>
+            <h1>Rejoignez la révolution de la gestion immobilière au Bénin</h1>
+            <p>Des milliers de propriétaires nous font déjà confiance</p>
+            <div class="auth-features">
+                <div class="auth-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>30 jours d'essai gratuit</span>
+                </div>
+                <div class="auth-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Support dédié en français</span>
+                </div>
+                <div class="auth-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Formation complète incluse</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="auth-right">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>Créer un compte</h2>
+                    <p>Commencez votre essai gratuit aujourd'hui</p>
+                </div>
+                
+                <div id="alert-message" class="alert" style="display: none;"></div>
+                
+                <form id="registerForm" class="auth-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="prenom">
+                                <i class="fas fa-user"></i>
+                                Prénom
+                            </label>
+                            <input 
+                                type="text" 
+                                id="prenom" 
+                                name="prenom" 
+                                placeholder="Jean" 
+                                required
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="nom">
+                                <i class="fas fa-user"></i>
+                                Nom
+                            </label>
+                            <input 
+                                type="text" 
+                                id="nom" 
+                                name="nom" 
+                                placeholder="Kouassi" 
+                                required
+                            >
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="email">
+                                <i class="fas fa-envelope"></i>
+                                Adresse email
+                            </label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                placeholder="votre@email.com" 
+                                required
+                            >
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="telephone">
+                                <i class="fas fa-phone"></i>
+                                Téléphone
+                            </label>
+                            <input 
+                                type="tel" 
+                                id="telephone" 
+                                name="telephone" 
+                                placeholder="+229 XX XX XX XX" 
+                                required
+                            >
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="role">
+                                <i class="fas fa-user-tag"></i>
+                                Vous êtes
+                            </label>
+                            <select id="role" name="role" required>
+                                <option value="">-- Choisir --</option>
+                                <option value="gestionnaire">Gestionnaire immobilier</option>
+                                <option value="locataire">Locataire</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password">
+                                <i class="fas fa-lock"></i>
+                                Mot de passe
+                            </label>
+                            <div class="password-input">
+                                <input 
+                                    type="password" 
+                                    id="password" 
+                                    name="password" 
+                                    placeholder="••••••••" 
+                                    required
+                                    minlength="6"
+                                >
+                                <button type="button" class="toggle-password" onclick="togglePassword()">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirm-password">
+                                <i class="fas fa-lock"></i>
+                                Confirmer
+                            </label>
+                            <input 
+                                type="password" 
+                                id="confirm-password" 
+                                name="confirm-password" 
+                                placeholder="••••••••" 
+                                required
+                                minlength="6"
+                            >
+                        </div>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input type="checkbox" id="terms" name="terms" required>
+                        <label for="terms">
+                            J'accepte les <a href="terms.html" class="link">conditions d'utilisation</a> et la <a href="privacy.html" class="link">politique de confidentialité</a>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn-submit">
+                        <span>Créer mon compte</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>Vous avez déjà un compte ? <a href="login.html" class="link-primary">Se connecter</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/auth.js"></script>
+</body>
+</html>

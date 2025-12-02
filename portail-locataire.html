@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portail Locataire - Hope Gestion Immobilière</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/portail.css">
+</head>
+<body class="dashboard-body">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-home-heart"></i>
+                <span>Portail Locataire</span>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="portail-locataire.html" class="nav-item active">
+                <i class="fas fa-home"></i>
+                <span>Mon logement</span>
+            </a>
+            <a href="#paiements" class="nav-item">
+                <i class="fas fa-credit-card"></i>
+                <span>Mes paiements</span>
+            </a>
+            <a href="#tickets" class="nav-item">
+                <i class="fas fa-ticket-alt"></i>
+                <span>Mes tickets</span>
+                <span class="badge">2</span>
+            </a>
+            <a href="#documents" class="nav-item">
+                <i class="fas fa-file-alt"></i>
+                <span>Documents</span>
+            </a>
+            <a href="#profil" class="nav-item">
+                <i class="fas fa-user"></i>
+                <span>Mon profil</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <button class="btn-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Déconnexion</span>
+            </button>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <h2>Bienvenue, <span id="tenantName">Locataire</span></h2>
+            </div>
+            
+            <div class="topbar-right">
+                <button class="btn-icon">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-dot"></span>
+                </button>
+                
+                <div class="user-menu">
+                    <img src="https://ui-avatars.com/api/?name=Locataire&background=259B24&color=fff" alt="User" id="userAvatar">
+                    <div class="user-info">
+                        <span class="user-name" id="userName">Locataire</span>
+                        <span class="user-role">Locataire</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="action-btn primary" onclick="openPaymentModal()">
+                    <i class="fas fa-mobile-alt"></i>
+                    <div>
+                        <strong>Payer mon loyer</strong>
+                        <span>Mobile Money</span>
+                    </div>
+                </button>
+                
+                <button class="action-btn warning" onclick="openTicketModal()">
+                    <i class="fas fa-tools"></i>
+                    <div>
+                        <strong>Signaler un problème</strong>
+                        <span>Créer un ticket</span>
+                    </div>
+                </button>
+                
+                <button class="action-btn info" onclick="viewDocuments()">
+                    <i class="fas fa-file-download"></i>
+                    <div>
+                        <strong>Mes documents</strong>
+                        <span>Contrat, quittances</span>
+                    </div>
+                </button>
+            </div>
+            
+            <!-- Info Cards -->
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-header">
+                        <i class="fas fa-home"></i>
+                        <h3>Mon logement</h3>
+                    </div>
+                    <div class="info-details">
+                        <div class="info-row">
+                            <span class="label">Adresse</span>
+                            <span class="value">Rue 123, Akpakpa, Cotonou</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Type</span>
+                            <span class="value">Appartement 3 pièces</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Loyer mensuel</span>
+                            <span class="value"><strong>150 000 FCFA</strong></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Bail valide jusqu'au</span>
+                            <span class="value">31 Décembre 2025</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-header">
+                        <i class="fas fa-calendar-check"></i>
+                        <h3>Paiements</h3>
+                    </div>
+                    <div class="payment-status">
+                        <div class="status-item">
+                            <span class="status-label">Dernier paiement</span>
+                            <span class="status-value success">
+                                <i class="fas fa-check-circle"></i>
+                                Décembre 2025
+                            </span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Prochain paiement</span>
+                            <span class="status-value warning">
+                                <i class="fas fa-clock"></i>
+                                05 Janvier 2026
+                            </span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Montant dû</span>
+                            <span class="status-value primary">
+                                <strong>150 000 FCFA</strong>
+                            </span>
+                        </div>
+                    </div>
+                    <button class="btn-pay-now" onclick="openPaymentModal()">
+                        <i class="fas fa-credit-card"></i>
+                        Payer maintenant
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Recent Tickets -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3>Mes tickets récents</h3>
+                    <a href="#tickets" class="link-view-all">Voir tout</a>
+                </div>
+                
+                <div class="tickets-list">
+                    <div class="ticket-item">
+                        <div class="ticket-icon warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <div class="ticket-info">
+                            <div class="ticket-title">Fuite d'eau dans la salle de bain</div>
+                            <div class="ticket-meta">
+                                <span class="ticket-date"><i class="fas fa-calendar"></i> 28 Nov 2025</span>
+                                <span class="ticket-status status-pending">En cours</span>
+                            </div>
+                        </div>
+                        <button class="btn-icon-sm btn-view">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="ticket-item">
+                        <div class="ticket-icon success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="ticket-info">
+                            <div class="ticket-title">Climatisation défectueuse</div>
+                            <div class="ticket-meta">
+                                <span class="ticket-date"><i class="fas fa-calendar"></i> 15 Nov 2025</span>
+                                <span class="ticket-status status-resolved">Résolu</span>
+                            </div>
+                        </div>
+                        <button class="btn-icon-sm btn-view">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Payment History -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3>Historique des paiements</h3>
+                    <button class="btn-secondary" onclick="exportPayments()">
+                        <i class="fas fa-download"></i>
+                        Télécharger
+                    </button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Mois concerné</th>
+                                <th>Montant</th>
+                                <th>Méthode</th>
+                                <th>Statut</th>
+                                <th>Reçu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>01 Déc 2025</td>
+                                <td>Décembre 2025</td>
+                                <td><strong>150 000 FCFA</strong></td>
+                                <td><i class="fas fa-mobile-alt"></i> MTN Mobile Money</td>
+                                <td><span class="status-badge disponible">Validé</span></td>
+                                <td>
+                                    <button class="btn-icon-sm btn-view">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>01 Nov 2025</td>
+                                <td>Novembre 2025</td>
+                                <td><strong>150 000 FCFA</strong></td>
+                                <td><i class="fas fa-mobile-alt"></i> Moov Money</td>
+                                <td><span class="status-badge disponible">Validé</span></td>
+                                <td>
+                                    <button class="btn-icon-sm btn-view">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Payment Modal (placeholder) -->
+    <div id="paymentModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Payer mon loyer</h3>
+            <p>Fonctionnalité de paiement Mobile Money en développement</p>
+            <button onclick="closeModal('paymentModal')" class="btn-primary">Fermer</button>
+        </div>
+    </div>
+    
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        requireAuth();
+        
+        const currentUser = getCurrentUser();
+        if (currentUser) {
+            document.getElementById('tenantName').textContent = currentUser.prenom;
+            document.getElementById('userName').textContent = `${currentUser.prenom} ${currentUser.nom}`;
+        }
+        
+        function openPaymentModal() {
+            showToast('Paiement Mobile Money - Fonctionnalité en cours de développement', 'info');
+        }
+        
+        function openTicketModal() {
+            showToast('Création de ticket - Fonctionnalité en cours de développement', 'info');
+        }
+        
+        function viewDocuments() {
+            showToast('Documents - Fonctionnalité en cours de développement', 'info');
+        }
+        
+        function exportPayments() {
+            showToast('Export en cours...', 'success');
+        }
+    </script>
+</body>
+</html>
