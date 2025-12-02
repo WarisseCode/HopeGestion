@@ -7,8 +7,8 @@ const API_CONFIG = {
     // Pour utiliser le nouveau backend, changer cette valeur à true
     USE_NEW_BACKEND: true,
     
-    // URL de base pour le nouveau backend
-    BACKEND_BASE_URL: 'http://localhost:3000/api',
+    // URL de base pour le nouveau backend - à modifier selon l'environnement
+    BACKEND_BASE_URL: process.env.BACKEND_URL || 'http://localhost:3000/api',
     
     // URL de base pour l'ancienne API intégrée
     LEGACY_BASE_URL: 'tables'
