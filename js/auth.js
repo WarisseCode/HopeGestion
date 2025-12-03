@@ -234,3 +234,131 @@ function requireRole(allowedRoles) {
         window.location.href = 'dashboard.html';
     }
 }
+
+// Gestion de l'authentification
+const USERS = [
+    { id: 1, prenom: 'Admin', nom: 'Principal', email: 'admin@hopegimmo.bj', password: 'admin123', role: 'admin' },
+    { id: 2, prenom: 'Gestionnaire', nom: 'Principal', email: 'gestionnaire@hopegimmo.bj', password: 'gest123', role: 'gestionnaire' },
+    { id: 3, prenom: 'Locataire', nom: 'Principal', email: 'locataire@hopegimmo.bj', password: 'loc123', role: 'locataire' }
+];
+
+// Vérifier les identifiants de connexion
+function login(email, password) {
+    const user = USERS.find(u => u.email === email && u.password === password);
+    if (user) {
+        // Stocker les informations utilisateur dans le localStorage
+        localStorage.setItem('currentUser', JSON.stringify({
+            id: user.id,
+            prenom: user.prenom,
+            nom: user.nom,
+            email: user.email,
+            role: user.role
+        }));
+        return true;
+    }
+    return false;
+}
+
+// Vérifier si l'utilisateur est connecté
+function isAuthenticated() {
+    return !!localStorage.getItem('currentUser');
+}
+
+// Obtenir les données de l'utilisateur connecté
+function getUserData() {
+    const userData = localStorage.getItem('currentUser');
+    return userData ? JSON.parse(userData) : null;
+}
+
+// Déconnexion
+function logout() {
+    localStorage.removeItem('currentUser');
+    window.location.href = 'login.html';
+}
+
+// Vérifier le rôle de l'utilisateur
+function hasRole(requiredRole) {
+    const user = getUserData();
+    if (!user) return false;
+    
+    // Admin a accès à tout
+    if (user.role === 'admin') return true;
+    
+    // Gestionnaire a accès aux mêmes fonctionnalités qu'admin
+    if (user.role === 'gestionnaire' && requiredRole !== 'admin') return true;
+    
+    // Locataire n'a accès qu'à ses propres fonctionnalités
+    return user.role === requiredRole;
+}
+
+// Rediriger si non autorisé
+function redirectToLoginIfNotAuthenticated() {
+    if (!isAuthenticated()) {
+        window.location.href = 'login.html';
+        return false;
+    }
+    return true;
+}
+
+// Rediriger selon le rôle
+function redirectBasedOnRole() {
+    const user = getUserData();
+    if (!user) {
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    switch (user.role) {
+        case 'admin':
+        case 'gestionnaire':
+            window.location.href = 'dashboard.html';
+            break;
+        case 'locataire':
+            window.location.href = 'portail-locataire.html';
+            break;
+        default:
+            window.location.href = 'login.html';
+    }
+}
+
+// Initialiser la protection des pages
+function initializePageProtection() {
+    // Ne pas protéger les pages publiques
+    const publicPages = ['index.html', 'login.html', 'register.html'];
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    if (publicPages.includes(currentPage)) {
+        // Si l'utilisateur est déjà connecté, le rediriger
+        if (isAuthenticated() && currentPage === 'login.html') {
+            redirectBasedOnRole();
+        }
+        return;
+    }
+    
+    // Protéger les pages privées
+    if (!redirectToLoginIfNotAuthenticated()) {
+        return;
+    }
+    
+    // Vérifier les permissions spécifiques à la page
+    const user = getUserData();
+    const pagePermissions = {
+        'dashboard.html': ['admin', 'gestionnaire'],
+        'portail-locataire.html': ['locataire'],
+        'biens.html': ['admin', 'gestionnaire'],
+        'proprietaires.html': ['admin', 'gestionnaire'],
+        'locataires.html': ['admin', 'gestionnaire'],
+        'baux.html': ['admin', 'gestionnaire'],
+        'paiements.html': ['admin', 'gestionnaire'],
+        'tickets.html': ['admin', 'gestionnaire'],
+        'documents.html': ['admin', 'gestionnaire'],
+        'notifications.html': ['admin', 'gestionnaire'],
+        'parametres.html': ['admin']
+    };
+    
+    const requiredRoles = pagePermissions[currentPage];
+    if (requiredRoles && !requiredRoles.some(role => hasRole(role))) {
+        // Rediriger vers la page appropriée selon le rôle
+        redirectBasedOnRole();
+    }
+}

@@ -369,3 +369,39 @@ async function markAsRead(id) {
         console.error('Erreur:', error);
     }
 }
+
+// Créer une nouvelle notification
+function createNotification(title, message, category = 'general', priority = 'normal', actionUrl = null) {
+    const notification = {
+        titre: title,
+        message: message,
+        categorie: category,
+        priorite: priority,
+        statut: 'unread',
+        date_creation: new Date().toISOString(),
+        action_url: actionUrl
+    };
+    
+    if (SIMULATION_MODE) {
+        // En mode simulation, ajouter à la liste
+        const newId = Math.max(...currentNotifications.map(n => n.id), 0) + 1;
+        currentNotifications.unshift({...notification, id: newId});
+        filteredNotifications = [...currentNotifications];
+        renderNotifications(filteredNotifications);
+        updateStats();
+        return;
+    }
+    
+    // En mode API réelle, envoyer à l'API
+    fetch(`${API_BASE_URL}/notifications`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(notification)
+    }).then(response => {
+        if (response.ok) {
+            loadNotifications(); // Recharger pour afficher la nouvelle notification
+        }
+    }).catch(error => {
+        console.error('Erreur lors de la création de la notification:', error);
+    });
+}

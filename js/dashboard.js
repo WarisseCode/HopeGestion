@@ -22,11 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     // Load dashboard data
-    await loadDashboardStats();
-    await loadRecentPayments();
-    await loadRecentTickets();
-    await loadBiensTable();
-    await initCharts();
+    await loadDashboardData();
     
     // Menu toggle for mobile
     const menuToggle = document.querySelector('.btn-menu-toggle');
@@ -39,273 +35,198 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Load dashboard statistics
-async function loadDashboardStats() {
+// Charger les données du dashboard
+async function loadDashboardData() {
     try {
-        // Load biens
-        const biensData = await API.get('biens', { limit: 1000 });
-        const biens = biensData.data || [];
+        showLoadingSpinner('biensTableBody');
+        showLoadingSpinner('recentPaiements');
+        showLoadingSpinner('recentTickets');
         
-        // Load paiements
-        const paiementsData = await API.get('paiements', { limit: 1000 });
-        const paiements = paiementsData.data || [];
-        
-        // Load tickets
-        const ticketsData = await API.get('tickets', { limit: 1000 });
-        const tickets = ticketsData.data || [];
-        
-        // Calculate stats
-        const totalBiens = biens.length;
-        const currentMonth = new Date().toISOString().slice(0, 7);
-        
-        const revenusMois = paiements
-            .filter(p => p.mois_concerne === currentMonth && p.statut === 'Validé')
-            .reduce((sum, p) => sum + (p.montant || 0), 0);
-        
-        const impayes = paiements
-            .filter(p => p.statut === 'En attente')
-            .reduce((sum, p) => sum + (p.montant || 0), 0);
-        
-        const ticketsOuverts = tickets.filter(t => t.statut === 'Ouvert' || t.statut === 'En cours').length;
-        
-        // Update UI
-        document.getElementById('totalBiens').textContent = totalBiens;
-        document.getElementById('revenusMois').textContent = formatCurrency(revenusMois);
-        document.getElementById('impayes').textContent = formatCurrency(impayes);
-        document.getElementById('ticketsOuverts').textContent = ticketsOuverts;
-        
-    } catch (error) {
-        console.error('Error loading dashboard stats:', error);
-        showToast('Erreur lors du chargement des statistiques', 'error');
-    }
-}
-
-// Load recent payments
-async function loadRecentPayments() {
-    const container = document.getElementById('recentPayments');
-    
-    try {
-        const response = await API.get('paiements', { limit: 5, sort: '-created_at' });
-        const payments = response.data || [];
-        
-        if (payments.length === 0) {
-            container.innerHTML = '<p class="text-center" style="color: var(--text-light); padding: 2rem;">Aucun paiement récent</p>';
+        if (SIMULATION_MODE) {
+            // Mode simulation avec données de démonstration
+            const demoData = getDemoDashboardData();
+            renderDashboardData(demoData);
             return;
         }
         
-        // Get locataires data for names
-        const locatairesData = await API.get('locataires', { limit: 1000 });
-        const locataires = locatairesData.data || [];
+        // Charger toutes les données en parallèle
+        const [biensResponse, paiementsResponse, ticketsResponse] = await Promise.all([
+            fetch(`${API_BASE_URL}/biens`),
+            fetch(`${API_BASE_URL}/paiements?_sort=date_paiement&_order=desc&_limit=5`),
+            fetch(`${API_BASE_URL}/tickets?_sort=date_creation&_order=desc&_limit=5`)
+        ]);
         
-        container.innerHTML = payments.map(payment => {
-            const locataire = locataires.find(l => l.id === payment.locataire_id);
-            const locataireNom = locataire ? locataire.nom : 'Locataire inconnu';
-            
-            return `
-                <div class="activity-item">
-                    <div class="activity-icon ${payment.statut === 'Validé' ? 'success' : 'warning'}">
-                        <i class="fas fa-${payment.statut === 'Validé' ? 'check' : 'clock'}"></i>
-                    </div>
-                    <div class="activity-info">
-                        <div class="activity-title">${locataireNom}</div>
-                        <div class="activity-desc">${payment.type_paiement} - ${formatCurrency(payment.montant)}</div>
-                        <div class="activity-meta">
-                            <i class="fas fa-calendar"></i>
-                            <span>${formatShortDate(payment.date_paiement)}</span>
-                            <span class="status-badge ${payment.statut === 'Validé' ? 'disponible' : 'occupe'}">${payment.statut}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        
-    } catch (error) {
-        console.error('Error loading recent payments:', error);
-        container.innerHTML = '<p class="text-center" style="color: var(--accent); padding: 2rem;">Erreur de chargement</p>';
-    }
-}
-
-// Load recent tickets
-async function loadRecentTickets() {
-    const container = document.getElementById('recentTickets');
-    
-    try {
-        const response = await API.get('tickets', { limit: 5, sort: '-created_at' });
-        const tickets = response.data || [];
-        
-        if (tickets.length === 0) {
-            container.innerHTML = '<p class="text-center" style="color: var(--text-light); padding: 2rem;">Aucun ticket récent</p>';
-            return;
+        if (!biensResponse.ok || !paiementsResponse.ok || !ticketsResponse.ok) {
+            throw new Error('Erreur lors du chargement des données du dashboard');
         }
         
-        // Get biens data for addresses
-        const biensData = await API.get('biens', { limit: 1000 });
-        const biens = biensData.data || [];
+        const biens = await biensResponse.json();
+        const paiements = await paiementsResponse.json();
+        const tickets = await ticketsResponse.json();
         
-        container.innerHTML = tickets.map(ticket => {
-            const bien = biens.find(b => b.id === ticket.bien_id);
-            const bienAdresse = bien ? bien.adresse : 'Bien inconnu';
-            
-            const priorityClass = {
-                'Urgente': 'accent',
-                'Haute': 'warning',
-                'Moyenne': 'info',
-                'Faible': 'success'
-            }[ticket.priorite] || 'info';
-            
-            return `
-                <div class="activity-item">
-                    <div class="activity-icon ${ticket.statut === 'Résolu' ? 'success' : 'warning'}">
-                        <i class="fas fa-${ticket.statut === 'Résolu' ? 'check-circle' : 'exclamation-circle'}"></i>
-                    </div>
-                    <div class="activity-info">
-                        <div class="activity-title">${ticket.titre}</div>
-                        <div class="activity-desc">${bienAdresse}</div>
-                        <div class="activity-meta">
-                            <i class="fas fa-calendar"></i>
-                            <span>${formatShortDate(ticket.date_creation)}</span>
-                            <span class="status-badge ${ticket.statut === 'Résolu' ? 'disponible' : 'occupe'}">${ticket.statut}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        
+        renderDashboardData({ biens, paiements, tickets });
     } catch (error) {
-        console.error('Error loading recent tickets:', error);
-        container.innerHTML = '<p class="text-center" style="color: var(--accent); padding: 2rem;">Erreur de chargement</p>';
+        console.error('Erreur:', error);
+        showToast('Erreur lors du chargement des données du dashboard', 'error');
+        
+        // Mode simulation en cas d'erreur
+        const demoData = getDemoDashboardData();
+        renderDashboardData(demoData);
     }
 }
 
-// Load biens table
-async function loadBiensTable() {
-    const tbody = document.getElementById('biensTableBody');
+// Obtenir les données de démonstration du dashboard
+function getDemoDashboardData() {
+    return {
+        biens: [
+            {
+                id: 1,
+                titre: "Appartement Duplex",
+                type: "appartement",
+                ville: "Cotonou",
+                prix_location: 150000,
+                statut: "Disponible"
+            },
+            {
+                id: 2,
+                titre: "Villa Moderne",
+                type: "villa",
+                ville: "Porto-Novo",
+                prix_location: 250000,
+                statut: "Occupé"
+            },
+            {
+                id: 3,
+                titre: "Boutique Commerciale",
+                type: "boutique",
+                ville: "Parakou",
+                prix_location: 100000,
+                statut: "En maintenance"
+            }
+        ],
+        paiements: [
+            {
+                id: 1,
+                reference: "PAY-001",
+                montant: 170000,
+                date_paiement: "2023-10-05",
+                statut: "Validé"
+            },
+            {
+                id: 2,
+                reference: "PAY-002",
+                montant: 280000,
+                date_paiement: "2023-10-10",
+                statut: "Validé"
+            }
+        ],
+        tickets: [
+            {
+                id: 1,
+                reference: "TKT-001",
+                titre: "Fuite d'eau dans la cuisine",
+                priorite: "Haute",
+                statut: "En cours"
+            },
+            {
+                id: 2,
+                reference: "TKT-002",
+                titre: "Problème de climatisation",
+                priorite: "Moyenne",
+                statut: "Ouvert"
+            }
+        ]
+    };
+}
+
+// Rendre les données du dashboard
+function renderDashboardData(data) {
+    renderBiens(data.biens);
+    renderRecentPaiements(data.paiements);
+    renderRecentTickets(data.tickets);
+    updateStats(data.biens, data.paiements);
+    initializeCharts(data.biens, data.paiements);
+}
+
+// Mettre à jour les statistiques
+function updateStats(biens, paiements) {
+    const totalBiens = biens.length;
+    const biensDisponibles = biens.filter(bien => bien.statut === 'Disponible').length;
+    const revenusMensuels = paiements
+        .filter(p => p.statut === 'Validé')
+        .reduce((sum, paiement) => sum + paiements.montant, 0);
+    const ticketsOuverts = 2; // Simulation
     
-    try {
-        const response = await API.get('biens', { limit: 10, sort: '-created_at' });
-        const biens = response.data || [];
-        
-        if (biens.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding: 2rem; color: var(--text-light);">Aucun bien enregistré</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = biens.map(bien => `
-            <tr>
-                <td><strong>${bien.reference || '-'}</strong></td>
-                <td>${bien.type_bien || '-'}</td>
-                <td>${bien.adresse || '-'}, ${bien.ville || '-'}</td>
-                <td><strong>${formatCurrency(bien.loyer_mensuel || 0)}</strong></td>
-                <td>
-                    <span class="status-badge ${(bien.statut || '').toLowerCase().replace('é', 'e')}">${bien.statut || '-'}</span>
-                </td>
-                <td>
-                    <div class="table-actions">
-                        <button class="btn-icon-sm btn-view" onclick="viewBien('${bien.id}')" data-tooltip="Voir">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn-icon-sm btn-edit" onclick="editBien('${bien.id}')" data-tooltip="Modifier">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-icon-sm btn-delete" onclick="deleteBien('${bien.id}')" data-tooltip="Supprimer">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-        
-    } catch (error) {
-        console.error('Error loading biens table:', error);
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding: 2rem; color: var(--accent);">Erreur de chargement</td></tr>';
-    }
+    document.getElementById('totalBiens').textContent = totalBiens;
+    document.getElementById('biensDisponibles').textContent = biensDisponibles;
+    document.getElementById('revenusMensuels').textContent = formatCurrency(revenusMensuels);
+    document.getElementById('ticketsOuverts').textContent = ticketsOuverts;
 }
 
-// Initialize charts
-async function initCharts() {
-    try {
-        // Revenus chart
-        const revenusCtx = document.getElementById('revenusChart');
-        if (revenusCtx) {
-            new Chart(revenusCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
-                    datasets: [{
-                        label: 'Revenus (FCFA)',
-                        data: [320000, 450000, 380000, 520000, 490000, 610000, 580000, 640000, 590000, 680000, 720000, 750000],
-                        borderColor: '#259B24',
-                        backgroundColor: 'rgba(37, 155, 36, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toLocaleString() + ' FCFA';
-                                }
-                            }
-                        }
+// Initialiser les graphiques
+function initializeCharts(biens, paiements) {
+    // Graphique de répartition des biens par type
+    const biensParType = {};
+    biens.forEach(bien => {
+        biensParType[bien.type] = (biensParType[bien.type] || 0) + 1;
+    });
+    
+    const typeLabels = Object.keys(biensParType);
+    const typeData = Object.values(biensParType);
+    
+    const typeChartCtx = document.getElementById('biensTypeChart');
+    if (typeChartCtx) {
+        new Chart(typeChartCtx, {
+            type: 'doughnut',
+            data: {
+                labels: typeLabels,
+                datasets: [{
+                    data: typeData,
+                    backgroundColor: [
+                        '#259B24',
+                        '#FFD700',
+                        '#E84118',
+                        '#17A2B8',
+                        '#6C757D'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
                     }
                 }
-            });
-        }
-        
-        // Biens chart
-        const biensCtx = document.getElementById('biensChart');
-        if (biensCtx) {
-            const biensData = await API.get('biens', { limit: 1000 });
-            const biens = biensData.data || [];
-            
-            const typeCounts = {};
-            biens.forEach(bien => {
-                const type = bien.type_bien || 'Autre';
-                typeCounts[type] = (typeCounts[type] || 0) + 1;
-            });
-            
-            new Chart(biensCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(typeCounts),
-                    datasets: [{
-                        data: Object.values(typeCounts),
-                        backgroundColor: [
-                            '#259B24',
-                            '#FFD700',
-                            '#3b82f6',
-                            '#fb923c',
-                            '#ef4444',
-                            '#8b5cf6',
-                            '#ec4899',
-                            '#14b8a6'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
+            }
+        });
+    }
+    
+    // Graphique des revenus mensuels
+    const revenusCtx = document.getElementById('revenusChart');
+    if (revenusCtx) {
+        new Chart(revenusCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
+                datasets: [{
+                    label: 'Revenus (FCFA)',
+                    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 150000, 280000, 0], // Données de démonstration
+                    borderColor: '#259B24',
+                    backgroundColor: 'rgba(37, 155, 36, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
                     }
                 }
-            });
-        }
-        
-    } catch (error) {
-        console.error('Error initializing charts:', error);
+            }
+        });
     }
 }
 
