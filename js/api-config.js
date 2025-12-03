@@ -59,14 +59,23 @@ window.apiRequest = async function(url, options = {}) {
         
         // Vérifier si la réponse est OK
         if (!response.ok) {
+            // Si c'est une erreur 404, c'est probablement une URL incorrecte
+            if (response.status === 404) {
+                throw new Error(`Endpoint non trouvé: ${url}. Veuillez vérifier l'URL de l'API.`);
+            }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        // Retourner le JSON si possible, sinon le texte
+        // Vérifier le type de contenu
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             return await response.json();
+        } else if (contentType && contentType.includes('text/html')) {
+            // Si on reçoit du HTML au lieu de JSON, c'est une erreur
+            const text = await response.text();
+            throw new Error(`Réponse inattendue du serveur. Type de contenu: ${contentType}. Contenu: ${text.substring(0, 200)}...`);
         } else {
+            // Pour les autres types de contenu
             return await response.text();
         }
     } catch (error) {

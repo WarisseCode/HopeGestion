@@ -210,6 +210,26 @@ app.delete('/api/tables/:table/:id', (req, res) => {
   });
 });
 
+// Middleware pour gérer les routes non trouvées
+// Renvoie une erreur JSON au lieu d'une page HTML
+app.use((req, res, next) => {
+  res.status(404).json({
+    error: 'Route non trouvée',
+    message: `La route ${req.originalUrl} n'existe pas sur ce serveur`,
+    statusCode: 404
+  });
+});
+
+// Middleware de gestion d'erreurs
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    error: 'Erreur interne du serveur',
+    message: 'Une erreur inattendue s\'est produite',
+    statusCode: 500
+  });
+});
+
 // Démarrage du serveur
 app.listen(PORT, () => {
   console.log(`Serveur démarré sur le port ${PORT}`);

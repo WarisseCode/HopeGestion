@@ -107,7 +107,10 @@ async function loginAsDemo(role) {
             // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
             const data = window.apiRequest ? 
                 await window.apiRequest(url) : 
-                await fetch(url).then(res => res.json());
+                await fetch(url).then(res => {
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return res.json();
+                });
             
             let userId;
             
@@ -148,7 +151,10 @@ async function loginAsDemo(role) {
                             role: demoAccount.role,
                             actif: true
                         })
-                    }).then(res => res.json());
+                    }).then(res => {
+                        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                        return res.json();
+                    });
                 
                 userId = createdUser.id || createdUser.insertId; // Handle both API formats
             }
@@ -199,7 +205,10 @@ if (document.getElementById('loginForm')) {
             // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
             const data = window.apiRequest ? 
                 await window.apiRequest(url) : 
-                await fetch(url).then(res => res.json());
+                await fetch(url).then(res => {
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return res.json();
+                });
             
             if (data.data && data.data.length > 0) {
                 const user = data.data[0];
@@ -275,7 +284,10 @@ if (document.getElementById('registerForm')) {
             // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
             const checkData = window.apiRequest ? 
                 await window.apiRequest(checkUrl) : 
-                await fetch(checkUrl).then(res => res.json());
+                await fetch(checkUrl).then(res => {
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return res.json();
+                });
             
             if (checkData.data && checkData.data.length > 0) {
                 showAlert('Cet email est déjà utilisé', 'error');
@@ -299,6 +311,9 @@ if (document.getElementById('registerForm')) {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(formData)
+                }).then(res => {
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return res;
                 });
             
             if (response.ok || response.id) {
