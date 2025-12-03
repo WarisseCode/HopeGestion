@@ -24,19 +24,11 @@ async function loadProprietaires() {
     try {
         showLoadingSpinner('proprietairesTableBody');
         
-        if (SIMULATION_MODE) {
-            // Mode simulation avec données de démonstration
-            currentProprietaires = getDemoProprietaires();
-            renderProprietaires(currentProprietaires);
-            updateStats();
-            return;
-        }
+        const response = await apiRequest(buildUrl('proprietaires'));
+        const proprietaires = response.data || response;
         
-        const response = await fetch(`${API_BASE_URL}/proprietaires`);
-        if (!response.ok) throw new Error('Erreur lors du chargement des propriétaires');
-        
-        currentProprietaires = await response.json();
-        renderProprietaires(currentProprietaires);
+        currentProprietaires = proprietaires;
+        renderProprietaires(proprietaires);
         updateStats();
     } catch (error) {
         console.error('Erreur:', error);

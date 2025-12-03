@@ -33,19 +33,11 @@ async function loadTickets() {
     try {
         showLoadingSpinner('ticketsTableBody');
         
-        if (SIMULATION_MODE) {
-            // Mode simulation avec données de démonstration
-            currentTickets = getDemoTickets();
-            renderTickets(currentTickets);
-            updateStats();
-            return;
-        }
+        const response = await apiRequest(buildUrl('tickets'));
+        const tickets = response.data || response;
         
-        const response = await fetch(`${API_BASE_URL}/tickets`);
-        if (!response.ok) throw new Error('Erreur lors du chargement des tickets');
-        
-        currentTickets = await response.json();
-        renderTickets(currentTickets);
+        currentTickets = tickets;
+        renderTickets(tickets);
         updateStats();
     } catch (error) {
         console.error('Erreur:', error);
@@ -57,34 +49,22 @@ async function loadTickets() {
     }
 }
 
-// Charger les biens
+// Charger les biens pour le formulaire
 async function loadBiens() {
     try {
-        if (SIMULATION_MODE) {
-            currentBiens = getDemoBiens();
-            return;
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/biens`);
-        if (!response.ok) throw new Error('Erreur lors du chargement des biens');
-        currentBiens = await response.json();
+        const response = await apiRequest(buildUrl('biens'));
+        currentBiens = response.data || response;
     } catch (error) {
         console.error('Erreur:', error);
         currentBiens = getDemoBiens();
     }
 }
 
-// Charger les locataires
+// Charger les locataires pour le formulaire
 async function loadLocataires() {
     try {
-        if (SIMULATION_MODE) {
-            currentLocataires = getDemoLocataires();
-            return;
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/locataires`);
-        if (!response.ok) throw new Error('Erreur lors du chargement des locataires');
-        currentLocataires = await response.json();
+        const response = await apiRequest(buildUrl('locataires'));
+        currentLocataires = response.data || response;
     } catch (error) {
         console.error('Erreur:', error);
         currentLocataires = getDemoLocataires();

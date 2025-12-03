@@ -33,19 +33,11 @@ async function loadPaiements() {
     try {
         showLoadingSpinner('paiementsTableBody');
         
-        if (SIMULATION_MODE) {
-            // Mode simulation avec données de démonstration
-            currentPaiements = getDemoPaiements();
-            renderPaiements(currentPaiements);
-            updateStats();
-            return;
-        }
+        const response = await apiRequest(buildUrl('paiements'));
+        const paiements = response.data || response;
         
-        const response = await fetch(`${API_BASE_URL}/paiements`);
-        if (!response.ok) throw new Error('Erreur lors du chargement des paiements');
-        
-        currentPaiements = await response.json();
-        renderPaiements(currentPaiements);
+        currentPaiements = paiements;
+        renderPaiements(paiements);
         updateStats();
     } catch (error) {
         console.error('Erreur:', error);
@@ -57,17 +49,11 @@ async function loadPaiements() {
     }
 }
 
-// Charger les baux
+// Charger les baux pour le formulaire
 async function loadBaux() {
     try {
-        if (SIMULATION_MODE) {
-            currentBaux = getDemoBaux();
-            return;
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/baux`);
-        if (!response.ok) throw new Error('Erreur lors du chargement des baux');
-        currentBaux = await response.json();
+        const response = await apiRequest(buildUrl('baux'));
+        currentBaux = response.data || response;
     } catch (error) {
         console.error('Erreur:', error);
         currentBaux = getDemoBaux();

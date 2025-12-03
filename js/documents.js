@@ -29,21 +29,13 @@ function loadUserData() {
 // Charger les documents
 async function loadDocuments() {
     try {
-        showLoadingSpinner('documentsGrid');
+        showLoadingSpinner('documentsTableBody');
         
-        if (SIMULATION_MODE) {
-            // Mode simulation avec données de démonstration
-            currentDocuments = getDemoDocuments();
-            renderDocuments(currentDocuments);
-            updateStats();
-            return;
-        }
+        const response = await apiRequest(buildUrl('documents'));
+        const documents = response.data || response;
         
-        const response = await fetch(`${API_BASE_URL}/documents`);
-        if (!response.ok) throw new Error('Erreur lors du chargement des documents');
-        
-        currentDocuments = await response.json();
-        renderDocuments(currentDocuments);
+        currentDocuments = documents;
+        renderDocuments(documents);
         updateStats();
     } catch (error) {
         console.error('Erreur:', error);
@@ -55,17 +47,11 @@ async function loadDocuments() {
     }
 }
 
-// Charger les biens
+// Charger les biens pour le formulaire
 async function loadBiens() {
     try {
-        if (SIMULATION_MODE) {
-            currentBiens = getDemoBiens();
-            return;
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/biens`);
-        if (!response.ok) throw new Error('Erreur lors du chargement des biens');
-        currentBiens = await response.json();
+        const response = await apiRequest(buildUrl('biens'));
+        currentBiens = response.data || response;
     } catch (error) {
         console.error('Erreur:', error);
         currentBiens = getDemoBiens();

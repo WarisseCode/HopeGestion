@@ -24,19 +24,11 @@ async function loadLocataires() {
     try {
         showLoadingSpinner('locatairesTableBody');
         
-        if (SIMULATION_MODE) {
-            // Mode simulation avec données de démonstration
-            currentLocataires = getDemoLocataires();
-            renderLocataires(currentLocataires);
-            updateStats();
-            return;
-        }
+        const response = await apiRequest(buildUrl('locataires'));
+        const locataires = response.data || response;
         
-        const response = await fetch(`${API_BASE_URL}/locataires`);
-        if (!response.ok) throw new Error('Erreur lors du chargement des locataires');
-        
-        currentLocataires = await response.json();
-        renderLocataires(currentLocataires);
+        currentLocataires = locataires;
+        renderLocataires(locataires);
         updateStats();
     } catch (error) {
         console.error('Erreur:', error);

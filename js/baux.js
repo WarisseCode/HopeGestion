@@ -32,19 +32,11 @@ async function loadBaux() {
     try {
         showLoadingSpinner('bauxTableBody');
         
-        if (SIMULATION_MODE) {
-            // Mode simulation avec données de démonstration
-            currentBaux = getDemoBaux();
-            renderBaux(currentBaux);
-            updateStats();
-            return;
-        }
+        const response = await apiRequest(buildUrl('baux'));
+        const baux = response.data || response;
         
-        const response = await fetch(`${API_BASE_URL}/baux`);
-        if (!response.ok) throw new Error('Erreur lors du chargement des baux');
-        
-        currentBaux = await response.json();
-        renderBaux(currentBaux);
+        currentBaux = baux;
+        renderBaux(baux);
         updateStats();
     } catch (error) {
         console.error('Erreur:', error);
@@ -59,14 +51,8 @@ async function loadBaux() {
 // Charger les biens
 async function loadBiens() {
     try {
-        if (SIMULATION_MODE) {
-            currentBiens = getDemoBiens();
-            return;
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/biens`);
-        if (!response.ok) throw new Error('Erreur lors du chargement des biens');
-        currentBiens = await response.json();
+        const response = await apiRequest(buildUrl('biens'));
+        currentBiens = response.data || response;
     } catch (error) {
         console.error('Erreur:', error);
         currentBiens = getDemoBiens();
@@ -76,14 +62,8 @@ async function loadBiens() {
 // Charger les locataires
 async function loadLocataires() {
     try {
-        if (SIMULATION_MODE) {
-            currentLocataires = getDemoLocataires();
-            return;
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/locataires`);
-        if (!response.ok) throw new Error('Erreur lors du chargement des locataires');
-        currentLocataires = await response.json();
+        const response = await apiRequest(buildUrl('locataires'));
+        currentLocataires = response.data || response;
     } catch (error) {
         console.error('Erreur:', error);
         currentLocataires = getDemoLocataires();

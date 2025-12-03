@@ -24,29 +24,18 @@ async function loadNotifications() {
     try {
         showLoadingSpinner('notificationsList');
         
-        if (SIMULATION_MODE) {
-            // Mode simulation avec données de démonstration
-            currentNotifications = getDemoNotifications();
-            filteredNotifications = [...currentNotifications];
-            renderNotifications(filteredNotifications);
-            updateStats();
-            return;
-        }
+        const response = await apiRequest(buildUrl('notifications'));
+        const notifications = response.data || response;
         
-        const response = await fetch(`${API_BASE_URL}/notifications`);
-        if (!response.ok) throw new Error('Erreur lors du chargement des notifications');
-        
-        currentNotifications = await response.json();
-        filteredNotifications = [...currentNotifications];
-        renderNotifications(filteredNotifications);
+        currentNotifications = notifications;
+        renderNotifications(notifications);
         updateStats();
     } catch (error) {
         console.error('Erreur:', error);
         showToast('Erreur lors du chargement des notifications', 'error');
         // En mode simulation en cas d'erreur
         currentNotifications = getDemoNotifications();
-        filteredNotifications = [...currentNotifications];
-        renderNotifications(filteredNotifications);
+        renderNotifications(currentNotifications);
         updateStats();
     }
 }

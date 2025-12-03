@@ -42,27 +42,16 @@ async function loadDashboardData() {
         showLoadingSpinner('recentPaiements');
         showLoadingSpinner('recentTickets');
         
-        if (SIMULATION_MODE) {
-            // Mode simulation avec données de démonstration
-            const demoData = getDemoDashboardData();
-            renderDashboardData(demoData);
-            return;
-        }
-        
         // Charger toutes les données en parallèle
         const [biensResponse, paiementsResponse, ticketsResponse] = await Promise.all([
-            fetch(`${API_BASE_URL}/biens`),
-            fetch(`${API_BASE_URL}/paiements?_sort=date_paiement&_order=desc&_limit=5`),
-            fetch(`${API_BASE_URL}/tickets?_sort=date_creation&_order=desc&_limit=5`)
+            apiRequest(buildUrl('biens')),
+            apiRequest(buildUrl('paiements', null, { _sort: 'date_paiement', _order: 'desc', _limit: 5 })),
+            apiRequest(buildUrl('tickets', null, { _sort: 'date_creation', _order: 'desc', _limit: 5 }))
         ]);
         
-        if (!biensResponse.ok || !paiementsResponse.ok || !ticketsResponse.ok) {
-            throw new Error('Erreur lors du chargement des données du dashboard');
-        }
-        
-        const biens = await biensResponse.json();
-        const paiements = await paiementsResponse.json();
-        const tickets = await ticketsResponse.json();
+        const biens = biensResponse.data || biensResponse;
+        const paiements = paiementsResponse.data || paiementsResponse;
+        const tickets = ticketsResponse.data || ticketsResponse;
         
         renderDashboardData({ biens, paiements, tickets });
     } catch (error) {

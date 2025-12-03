@@ -41,61 +41,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Load biens
+// Charger les biens
 async function loadBiens() {
-    const tbody = document.getElementById('biensTableBody');
-    const searchInput = document.getElementById('searchInput');
-    
     try {
-        // Show loading state
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center">
-                    <div class="loading-spinner">
-                        <div class="spinner"></div>
-                        <p>Chargement des biens...</p>
-                    </div>
-                </td>
-            </tr>
-        `;
+        showLoadingSpinner('biensTableBody');
         
-        // Get search term
-        const searchTerm = searchInput ? searchInput.value.trim() : '';
+        const response = await apiRequest(buildUrl('biens'));
+        const biens = response.data || response;
         
-        // Load biens with search
-        const params = { limit: 1000 };
-        if (searchTerm) {
-            params.search = searchTerm;
-        }
-        
-        const response = await API.get('biens', params);
-        const biens = response.data || [];
-        
-        // Update stats
-        updateStats(biens);
-        
-        // Display biens
-        displayBiens(biens);
-        
+        currentBiens = biens;
+        renderBiens(biens);
+        updateStats();
     } catch (error) {
-        console.error('Error loading biens:', error);
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center" style="color: var(--accent); padding: 2rem;">
-                    Erreur de chargement des biens
-                </td>
-            </tr>
-        `;
+        console.error('Erreur:', error);
         showToast('Erreur lors du chargement des biens', 'error');
+        // En mode simulation en cas d'erreur
+        currentBiens = getDemoBiens();
+        renderBiens(currentBiens);
+        updateStats();
     }
 }
 
+let currentBiens = [];
+
 // Update stats
-function updateStats(biens) {
-    const totalBiens = biens.length;
-    const disponibles = biens.filter(b => b.statut === 'Disponible').length;
-    const occupes = biens.filter(b => b.statut === 'Occupé').length;
-    const maintenance = biens.filter(b => b.statut === 'En maintenance').length;
+function updateStats() {
+    const totalBiens = currentBiens.length;
+    const disponibles = currentBiens.filter(b => b.statut === 'Disponible').length;
+    const occupes = currentBiens.filter(b => b.statut === 'Occupé').length;
+    const maintenance = currentBiens.filter(b => b.statut === 'En maintenance').length;
     
     document.getElementById('totalBiens').textContent = totalBiens;
     document.getElementById('biensDisponibles').textContent = disponibles;
@@ -103,8 +77,8 @@ function updateStats(biens) {
     document.getElementById('biensMaintenance').textContent = maintenance;
 }
 
-// Display biens in table
-function displayBiens(biens) {
+// Render biens in table
+function renderBiens(biens) {
     const tbody = document.getElementById('biensTableBody');
     
     if (biens.length === 0) {

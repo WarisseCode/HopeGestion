@@ -236,27 +236,93 @@ function requireRole(allowedRoles) {
 }
 
 // Gestion de l'authentification
-const USERS = [
-    { id: 1, prenom: 'Admin', nom: 'Principal', email: 'admin@hopegimmo.bj', password: 'admin123', role: 'admin' },
-    { id: 2, prenom: 'Gestionnaire', nom: 'Principal', email: 'gestionnaire@hopegimmo.bj', password: 'gest123', role: 'gestionnaire' },
-    { id: 3, prenom: 'Locataire', nom: 'Principal', email: 'locataire@hopegimmo.bj', password: 'loc123', role: 'locataire' }
-];
+let currentUsers = [];
 
-// Vérifier les identifiants de connexion
-function login(email, password) {
-    const user = USERS.find(u => u.email === email && u.password === password);
-    if (user) {
-        // Stocker les informations utilisateur dans le localStorage
-        localStorage.setItem('currentUser', JSON.stringify({
-            id: user.id,
-            prenom: user.prenom,
-            nom: user.nom,
-            email: user.email,
-            role: user.role
-        }));
-        return true;
+// Charger les utilisateurs
+async function loadUsers() {
+    try {
+        // En mode simulation, utiliser les données simulées
+        if (window.API_CONFIG.SIMULATION_MODE) {
+            currentUsers = window.SIMULATION_DATA.users || [];
+            return currentUsers;
+        }
+        
+        const response = await apiRequest(buildUrl('users'));
+        currentUsers = response.data || response;
+        return currentUsers;
+    } catch (error) {
+        console.error('Erreur:', error);
+        showToast('Erreur lors du chargement des utilisateurs', 'error');
+        // En mode simulation en cas d'erreur
+        currentUsers = window.SIMULATION_DATA.users || [];
+        return currentUsers;
     }
-    return false;
+}
+
+// Fonction de connexion
+async function login(email, password) {
+    try {
+        showLoading(true);
+        
+        // En mode simulation, vérifier les identifiants dans les données simulées
+        if (window.API_CONFIG.SIMULATION_MODE) {
+            const users = await loadUsers();
+            const user = users.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                // Stocker les informations de l'utilisateur
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                localStorage.setItem('isLoggedIn', 'true');
+                
+                showLoading(false);
+                showToast('Connexion réussie!', 'success');
+                
+                // Rediriger vers le dashboard après un court délai
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+                
+                return true;
+            } else {
+                showLoading(false);
+                showToast('Identifiants incorrects', 'error');
+                return false;
+            }
+        }
+        
+        // Requête vers l'API en mode normal
+        const response = await apiRequest(buildUrl('users', null, { search: email }));
+        const users = response.data || response;
+        
+        if (users && users.length > 0) {
+            const user = users[0];
+            // Vérifier le mot de passe (en production, cela devrait être fait côté serveur)
+            if (user.password === password) {
+                // Stocker les informations de l'utilisateur
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                localStorage.setItem('isLoggedIn', 'true');
+                
+                showLoading(false);
+                showToast('Connexion réussie!', 'success');
+                
+                // Rediriger vers le dashboard après un court délai
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+                
+                return true;
+            }
+        }
+        
+        showLoading(false);
+        showToast('Identifiants incorrects', 'error');
+        return false;
+    } catch (error) {
+        console.error('Erreur de connexion:', error);
+        showLoading(false);
+        showToast('Erreur de connexion: ' + error.message, 'error');
+        return false;
+    }
 }
 
 // Vérifier si l'utilisateur est connecté

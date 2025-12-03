@@ -1,3 +1,27 @@
+// Charger les paramètres
+async function loadParametres() {
+    try {
+        showLoadingSpinner('parametresForm');
+        
+        // Charger les données de démonstration en mode simulation
+        if (window.API_CONFIG.SIMULATION_MODE) {
+            currentSettings = getDemoSettings();
+            renderSettings(currentSettings);
+            return;
+        }
+        
+        const response = await apiRequest(buildUrl('settings'));
+        currentSettings = response.data || response;
+        renderSettings(currentSettings);
+    } catch (error) {
+        console.error('Erreur:', error);
+        showToast('Erreur lors du chargement des paramètres', 'error');
+        // En mode simulation en cas d'erreur
+        currentSettings = getDemoSettings();
+        renderSettings(currentSettings);
+    }
+}
+
 // Gestion des paramètres
 let currentUsers = [];
 
