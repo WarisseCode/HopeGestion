@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - Hope Gestion Immobilière</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/pages.css">
+</head>
+<body class="dashboard-body">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-home-heart"></i>
+                <span>Hope Gimmo</span>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Tableau de bord</span>
+            </a>
+            <a href="biens.html" class="nav-item">
+                <i class="fas fa-building"></i>
+                <span>Biens immobiliers</span>
+            </a>
+            <a href="proprietaires.html" class="nav-item">
+                <i class="fas fa-user-tie"></i>
+                <span>Propriétaires</span>
+            </a>
+            <a href="locataires.html" class="nav-item">
+                <i class="fas fa-users"></i>
+                <span>Locataires</span>
+            </a>
+            <a href="baux.html" class="nav-item">
+                <i class="fas fa-file-contract"></i>
+                <span>Baux & Contrats</span>
+            </a>
+            <a href="paiements.html" class="nav-item">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Paiements</span>
+                <span class="badge">12</span>
+            </a>
+            <a href="tickets.html" class="nav-item">
+                <i class="fas fa-ticket-alt"></i>
+                <span>Tickets</span>
+                <span class="badge badge-danger">5</span>
+            </a>
+            <a href="documents.html" class="nav-item">
+                <i class="fas fa-file-alt"></i>
+                <span>Documents</span>
+            </a>
+            <a href="notifications.html" class="nav-item active">
+                <i class="fas fa-bell"></i>
+                <span>Notifications</span>
+                <span class="badge">8</span>
+            </a>
+            <a href="parametres.html" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Paramètres</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <button class="btn-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Déconnexion</span>
+            </button>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="btn-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2>Centre de Notifications</h2>
+            </div>
+            
+            <div class="topbar-right">
+                <button class="btn-icon" data-tooltip="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-dot"></span>
+                </button>
+                
+                <div class="user-menu">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=259B24&color=fff" alt="User" id="userAvatar">
+                    <div class="user-info">
+                        <span class="user-name" id="userName">Chargement...</span>
+                        <span class="user-role" id="userRole">Admin</span>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Page Content -->
+        <div class="dashboard-content">
+            <!-- Actions Bar -->
+            <div class="actions-bar">
+                <div class="actions-left">
+                    <div class="filter-bar">
+                        <select id="filterType">
+                            <option value="all">Tous les types</option>
+                            <option value="paiement">Paiements</option>
+                            <option value="maintenance">Maintenance</option>
+                            <option value="bail">Baux</option>
+                            <option value="document">Documents</option>
+                        </select>
+                        <select id="filterStatus">
+                            <option value="all">Tous les statuts</option>
+                            <option value="unread">Non lus</option>
+                            <option value="read">Lus</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="actions-right">
+                    <button class="btn-secondary" onclick="markAllAsRead()">
+                        <i class="fas fa-check-double"></i>
+                        <span>Tout marquer comme lu</span>
+                    </button>
+                    <button class="btn-danger" onclick="clearAllNotifications()">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Tout effacer</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card stat-primary">
+                    <div class="stat-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="stat-details">
+                        <span class="stat-label">Total Notifications</span>
+                        <span class="stat-value" id="totalNotifications">0</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card stat-warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-envelope-open"></i>
+                    </div>
+                    <div class="stat-details">
+                        <span class="stat-label">Non lues</span>
+                        <span class="stat-value" id="unreadNotifications">0</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card stat-success">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-details">
+                        <span class="stat-label">Lues</span>
+                        <span class="stat-value" id="readNotifications">0</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card stat-info">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-details">
+                        <span class="stat-label">Prioritaires</span>
+                        <span class="stat-value" id="urgentNotifications">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notifications List -->
+            <div class="table-card">
+                <div class="card-header">
+                    <h3>Liste des notifications</h3>
+                </div>
+                <div class="table-responsive">
+                    <div class="notifications-list" id="notificationsList">
+                        <div class="empty-state">
+                            <i class="fas fa-bell-slash fa-3x"></i>
+                            <h3>Aucune notification</h3>
+                            <p>Vous n'avez aucune notification pour le moment</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Notification Detail Modal -->
+    <div class="modal" id="notificationDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="notificationDetailTitle">Détails de la notification</h3>
+                <button class="btn-close" onclick="closeModal('notificationDetailModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="notification-detail" id="notificationDetailContent">
+                    <div class="detail-header">
+                        <div class="detail-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="detail-info">
+                            <h4 id="detailTitle">Titre de la notification</h4>
+                            <p class="detail-meta">
+                                <span id="detailDate">Date</span> • 
+                                <span id="detailCategory">Catégorie</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="detail-content" id="detailMessage">
+                        Contenu de la notification...
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('notificationDetailModal')">
+                    <span>Fermer</span>
+                </button>
+                <button class="btn-primary" id="actionButton" style="display: none;">
+                    <span>Action</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <!-- Scripts -->
+    <script src="js/api-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/notifications.js"></script>
+</body>
+</html>
