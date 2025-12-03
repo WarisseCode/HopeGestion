@@ -1,219 +1,259 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-// Création de la base de données
-const dbPath = path.join(__dirname, 'hope_gestion.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Erreur lors de la connexion à la base de données:', err.message);
-  } else {
-    console.log('Connecté à la base de données SQLite :', dbPath);
-    // Attendre un peu avant d'initialiser pour s'assurer que la connexion est bien établie
-    setTimeout(() => {
-      initializeDatabase();
-    }, 1000);
-  }
+// Créer/ouvrir la base de données
+const db = new sqlite3.Database(path.join(__dirname, 'hope-gestion.db'), (err) => {
+    if (err) {
+        console.error('Erreur lors de l\'ouverture de la base de données:', err.message);
+    } else {
+        console.log('Connexion à la base de données SQLite réussie');
+        initializeDatabase();
+    }
 });
 
-// Initialisation de la base de données
+// Initialiser la base de données avec les tables et données de démonstration
 function initializeDatabase() {
-  // Création de la table users
-  db.run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    nom TEXT NOT NULL,
-    prenom TEXT NOT NULL,
-    telephone TEXT,
-    role TEXT NOT NULL,
-    actif BOOLEAN DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`, (err) => {
-    if (err) {
-      console.error('Erreur lors de la création de la table users:', err.message);
-    } else {
-      console.log('Table users créée avec succès');
-    }
-  });
-
-  // Création de la table proprietaires
-  db.run(`CREATE TABLE IF NOT EXISTS proprietaires (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nom TEXT NOT NULL,
-    type TEXT NOT NULL,
-    ifu TEXT,
-    telephone TEXT,
-    email TEXT,
-    adresse TEXT,
-    nombre_biens INTEGER DEFAULT 0
-  )`, (err) => {
-    if (err) {
-      console.error('Erreur lors de la création de la table proprietaires:', err.message);
-    } else {
-      console.log('Table proprietaires créée avec succès');
-    }
-  });
-
-  // Création de la table biens
-  db.run(`CREATE TABLE IF NOT EXISTS biens (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    reference TEXT UNIQUE NOT NULL,
-    proprietaire_id INTEGER,
-    type_bien TEXT NOT NULL,
-    adresse TEXT NOT NULL,
-    ville TEXT NOT NULL,
-    superficie REAL,
-    nombre_pieces INTEGER,
-    loyer_mensuel REAL,
-    caution REAL,
-    statut TEXT DEFAULT 'Disponible',
-    equipements TEXT,
-    photos TEXT,
-    description TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (proprietaire_id) REFERENCES proprietaires (id)
-  )`, (err) => {
-    if (err) {
-      console.error('Erreur lors de la création de la table biens:', err.message);
-    } else {
-      console.log('Table biens créée avec succès');
-    }
-  });
-
-  // Création de la table locataires
-  db.run(`CREATE TABLE IF NOT EXISTS locataires (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nom TEXT NOT NULL,
-    prenom TEXT NOT NULL,
-    date_naissance DATE,
-    lieu_naissance TEXT,
-    cni TEXT,
-    profession TEXT,
-    employeur TEXT,
-    telephone TEXT,
-    email TEXT,
-    contact_urgence TEXT,
-    statut TEXT DEFAULT 'Actif'
-  )`, (err) => {
-    if (err) {
-      console.error('Erreur lors de la création de la table locataires:', err.message);
-    } else {
-      console.log('Table locataires créée avec succès');
-    }
-  });
-
-  // Création de la table baux
-  db.run(`CREATE TABLE IF NOT EXISTS baux (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    reference TEXT UNIQUE NOT NULL,
-    bien_id INTEGER NOT NULL,
-    locataire_id INTEGER NOT NULL,
-    date_debut DATE NOT NULL,
-    date_fin DATE NOT NULL,
-    loyer_mensuel REAL NOT NULL,
-    caution REAL,
-    frais_agence REAL,
-    type_bail TEXT NOT NULL,
-    conditions TEXT,
-    statut TEXT DEFAULT 'Actif',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (bien_id) REFERENCES biens (id),
-    FOREIGN KEY (locataire_id) REFERENCES locataires (id)
-  )`, (err) => {
-    if (err) {
-      console.error('Erreur lors de la création de la table baux:', err.message);
-    } else {
-      console.log('Table baux créée avec succès');
-    }
-  });
-
-  // Création de la table paiements
-  db.run(`CREATE TABLE IF NOT EXISTS paiements (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    reference TEXT UNIQUE NOT NULL,
-    bail_id INTEGER NOT NULL,
-    locataire_id INTEGER NOT NULL,
-    montant REAL NOT NULL,
-    mois_concerne TEXT NOT NULL,
-    date_paiement DATE NOT NULL,
-    methode_paiement TEXT NOT NULL,
-    operateur_mobile TEXT,
-    numero_transaction TEXT,
-    type_paiement TEXT NOT NULL,
-    statut TEXT DEFAULT 'Validé',
-    FOREIGN KEY (bail_id) REFERENCES baux (id),
-    FOREIGN KEY (locataire_id) REFERENCES locataires (id)
-  )`, (err) => {
-    if (err) {
-      console.error('Erreur lors de la création de la table paiements:', err.message);
-    } else {
-      console.log('Table paiements créée avec succès');
-    }
-  });
-
-  // Création de la table tickets
-  db.run(`CREATE TABLE IF NOT EXISTS tickets (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    reference TEXT UNIQUE NOT NULL,
-    bail_id INTEGER,
-    bien_id INTEGER,
-    locataire_id INTEGER,
-    titre TEXT NOT NULL,
-    description TEXT NOT NULL,
-    categorie TEXT,
-    priorite TEXT DEFAULT 'Moyenne',
-    statut TEXT DEFAULT 'Ouvert',
-    technicien_assigne TEXT,
-    cout_reparation REAL,
-    photos TEXT,
-    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (bail_id) REFERENCES baux (id),
-    FOREIGN KEY (bien_id) REFERENCES biens (id),
-    FOREIGN KEY (locataire_id) REFERENCES locataires (id)
-  )`, (err) => {
-    if (err) {
-      console.error('Erreur lors de la création de la table tickets:', err.message);
-    } else {
-      console.log('Table tickets créée avec succès');
-    }
-  });
-
-  // Création de la table notifications
-  db.run(`CREATE TABLE IF NOT EXISTS notifications (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    utilisateur_id INTEGER NOT NULL,
-    titre TEXT NOT NULL,
-    message TEXT NOT NULL,
-    type TEXT NOT NULL,
-    lu BOOLEAN DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (utilisateur_id) REFERENCES users (id)
-  )`, (err) => {
-    if (err) {
-      console.error('Erreur lors de la création de la table notifications:', err.message);
-    } else {
-      console.log('Table notifications créée avec succès');
-    }
-  });
-
-  // Attendre que toutes les tables soient créées avant d'insérer les données
-  setTimeout(() => {
-    // Insertion des données de démonstration
-    insertDemoData();
-  }, 2000);
+    // Créer les tables
+    db.serialize(() => {
+        // Table users
+        db.run(`CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            nom TEXT NOT NULL,
+            prenom TEXT NOT NULL,
+            telephone TEXT,
+            role TEXT NOT NULL,
+            actif BOOLEAN DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        
+        // Table proprietaires
+        db.run(`CREATE TABLE IF NOT EXISTS proprietaires (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type TEXT NOT NULL, -- 'personne_physique' ou 'personne_morale'
+            nom TEXT NOT NULL,
+            prenom TEXT,
+            entreprise TEXT,
+            telephone TEXT,
+            email TEXT,
+            adresse TEXT,
+            ville TEXT,
+            ifu TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        
+        // Table biens
+        db.run(`CREATE TABLE IF NOT EXISTS biens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reference TEXT UNIQUE,
+            type_bien TEXT NOT NULL,
+            adresse TEXT NOT NULL,
+            ville TEXT NOT NULL,
+            superficie REAL,
+            nombre_pieces INTEGER,
+            loyer_mensuel REAL NOT NULL,
+            charges_mensuelles REAL DEFAULT 0,
+            statut TEXT NOT NULL, -- 'Disponible', 'Occupé', 'En maintenance'
+            description TEXT,
+            equipements TEXT, -- JSON string
+            proprietaire_id INTEGER,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        
+        // Table locataires
+        db.run(`CREATE TABLE IF NOT EXISTS locataires (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nom TEXT NOT NULL,
+            prenom TEXT NOT NULL,
+            telephone TEXT,
+            email TEXT,
+            adresse TEXT,
+            ville TEXT,
+            profession TEXT,
+            employeur TEXT,
+            cni TEXT,
+            contact_urgence TEXT,
+            statut TEXT NOT NULL, -- 'Actif', 'Inactif', 'En attente'
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        
+        // Table baux
+        db.run(`CREATE TABLE IF NOT EXISTS baux (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reference TEXT UNIQUE,
+            bien_id INTEGER NOT NULL,
+            locataire_id INTEGER NOT NULL,
+            date_debut DATE NOT NULL,
+            date_fin DATE NOT NULL,
+            loyer_base REAL NOT NULL,
+            charges REAL DEFAULT 0,
+            caution REAL,
+            frais_agence REAL,
+            type_bail TEXT, -- 'Résidentiel', 'Commercial', 'Professionnel'
+            conditions_speciales TEXT,
+            statut TEXT NOT NULL, -- 'Actif', 'Expiré', 'Résilié'
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        
+        // Table paiements
+        db.run(`CREATE TABLE IF NOT EXISTS paiements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reference TEXT UNIQUE,
+            bail_id INTEGER NOT NULL,
+            locataire_id INTEGER NOT NULL,
+            mois_concerne TEXT NOT NULL, -- Format: 'YYYY-MM'
+            date_paiement DATE NOT NULL,
+            montant REAL NOT NULL,
+            methode_paiement TEXT, -- 'Mobile Money', 'Espèces', 'Virement', 'Chèque'
+            operateur TEXT, -- 'MTN', 'Moov'
+            numero_transaction TEXT,
+            statut TEXT NOT NULL, -- 'En attente', 'Validé', 'Rejeté', 'Remboursé'
+            notes TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        
+        // Table tickets
+        db.run(`CREATE TABLE IF NOT EXISTS tickets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reference TEXT UNIQUE,
+            bien_id INTEGER NOT NULL,
+            locataire_id INTEGER,
+            titre TEXT NOT NULL,
+            description TEXT NOT NULL,
+            categorie TEXT, -- 'Plomberie', 'Électricité', 'Menuiserie', 'Peinture', 'Climatisation'
+            priorite TEXT NOT NULL, -- 'Faible', 'Moyenne', 'Haute', 'Urgente'
+            statut TEXT NOT NULL, -- 'Ouvert', 'En cours', 'Résolu', 'Fermé'
+            date_creation DATE NOT NULL,
+            date_resolution DATE,
+            technicien_assigne TEXT,
+            cout_reparation REAL,
+            photos TEXT, -- JSON string with photo URLs
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        
+        // Table notifications
+        db.run(`CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            destinataire_id INTEGER NOT NULL,
+            type TEXT NOT NULL, -- 'paiement', 'ticket', 'bail', 'systeme'
+            titre TEXT NOT NULL,
+            message TEXT NOT NULL,
+            lien TEXT,
+            statut TEXT NOT NULL, -- 'lu', 'non_lu'
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        
+        // Insérer les données de démonstration
+        insertDemoData();
+    });
 }
 
-// Insertion des données de démonstration
+// Insérer les données de démonstration
 function insertDemoData() {
-  // Insertion des utilisateurs de démonstration
-  const insertUser = db.prepare(`INSERT OR IGNORE INTO users (email, password, nom, prenom, telephone, role, actif) VALUES (?, ?, ?, ?, ?, ?, ?)`);
-  
-  insertUser.run('admin@hopegimmo.bj', 'admin123', 'Administrateur', 'Système', '+229 XX XX XX XX', 'admin', 1);
-  insertUser.run('gestionnaire@hopegimmo.bj', 'gest123', 'Kouassi', 'Jean', '+229 XX XX XX XX', 'gestionnaire', 1);
-  insertUser.run('locataire@hopegimmo.bj', 'loc123', 'Adjovi', 'Marie', '+229 XX XX XX XX', 'locataire', 1);
-  
-  insertUser.finalize();
-  console.log('Données de démonstration insérées');
+    // Vérifier si les données existent déjà
+    db.get("SELECT COUNT(*) as count FROM users", [], (err, row) => {
+        if (err) {
+            console.error('Erreur lors de la vérification des données:', err.message);
+            return;
+        }
+        
+        // Si la base est vide, insérer les données de démonstration
+        if (row.count === 0) {
+            console.log('Insertion des données de démonstration...');
+            
+            // Insérer les utilisateurs de démonstration
+            const users = [
+                {
+                    email: 'admin@hopegimmo.bj',
+                    password: 'YWRtaW4xMjM=', // 'admin123' encodé en base64
+                    nom: 'Administrateur',
+                    prenom: 'Système',
+                    telephone: '+229 XX XX XX XX',
+                    role: 'admin',
+                    actif: 1
+                },
+                {
+                    email: 'gestionnaire@hopegimmo.bj',
+                    password: 'Z2VzdDEyMw==', // 'gest123' encodé en base64
+                    nom: 'Kouassi',
+                    prenom: 'Jean',
+                    telephone: '+229 XX XX XX XX',
+                    role: 'gestionnaire',
+                    actif: 1
+                },
+                {
+                    email: 'locataire@hopegimmo.bj',
+                    password: 'bG9jMTIz', // 'loc123' encodé en base64
+                    nom: 'Adjovi',
+                    prenom: 'Marie',
+                    telephone: '+229 XX XX XX XX',
+                    role: 'locataire',
+                    actif: 1
+                }
+            ];
+            
+            const userStmt = db.prepare("INSERT INTO users (email, password, nom, prenom, telephone, role, actif) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            users.forEach(user => {
+                userStmt.run([user.email, user.password, user.nom, user.prenom, user.telephone, user.role, user.actif]);
+            });
+            userStmt.finalize();
+            
+            // Insérer des biens de démonstration
+            const biens = [
+                {
+                    reference: 'BIEN-1001',
+                    type_bien: 'Appartement',
+                    adresse: 'Rue 123, Akpakpa',
+                    ville: 'Cotonou',
+                    superficie: 85,
+                    nombre_pieces: 3,
+                    loyer_mensuel: 150000,
+                    statut: 'Occupé',
+                    description: 'Bel appartement avec vue sur l\'océan'
+                },
+                {
+                    reference: 'BIEN-1002',
+                    type_bien: 'Villa',
+                    adresse: 'Avenue des Roses, Quartier Latin',
+                    ville: 'Cotonou',
+                    superficie: 250,
+                    nombre_pieces: 5,
+                    loyer_mensuel: 450000,
+                    statut: 'Disponible',
+                    description: 'Villa spacieuse avec jardin et piscine'
+                },
+                {
+                    reference: 'BIEN-1003',
+                    type_bien: 'Bureau',
+                    adresse: 'Immeuble ABC, 3ème étage',
+                    ville: 'Porto-Novo',
+                    superficie: 120,
+                    nombre_pieces: 2,
+                    loyer_mensuel: 200000,
+                    statut: 'En maintenance',
+                    description: 'Bureau moderne avec climatisation'
+                }
+            ];
+            
+            const bienStmt = db.prepare("INSERT INTO biens (reference, type_bien, adresse, ville, superficie, nombre_pieces, loyer_mensuel, statut, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            biens.forEach(bien => {
+                bienStmt.run([bien.reference, bien.type_bien, bien.adresse, bien.ville, bien.superficie, bien.nombre_pieces, bien.loyer_mensuel, bien.statut, bien.description]);
+            });
+            bienStmt.finalize();
+            
+            console.log('Données de démonstration insérées avec succès');
+        } else {
+            console.log('Base de données déjà initialisée avec des données');
+        }
+    });
 }
 
 module.exports = db;

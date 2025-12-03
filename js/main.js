@@ -88,9 +88,14 @@ const API = {
         }
         
         try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
+            // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+            if (typeof window.apiRequest === 'function') {
+                return await window.apiRequest(url);
+            } else {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            }
         } catch (error) {
             console.error(`Error fetching ${table}:`, error);
             throw error;
@@ -104,9 +109,14 @@ const API = {
             `tables/${table}/${id}`;
         
         try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
+            // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+            if (typeof window.apiRequest === 'function') {
+                return await window.apiRequest(url);
+            } else {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            }
         } catch (error) {
             console.error(`Error fetching ${table}/${id}:`, error);
             throw error;
@@ -120,15 +130,23 @@ const API = {
             `tables/${table}`;
         
         try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
+            // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+            if (typeof window.apiRequest === 'function') {
+                return await window.apiRequest(url, {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+            } else {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            }
         } catch (error) {
             console.error(`Error creating ${table}:`, error);
             throw error;
@@ -142,15 +160,23 @@ const API = {
             `tables/${table}/${id}`;
         
         try {
-            const response = await fetch(url, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
+            // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+            if (typeof window.apiRequest === 'function') {
+                return await window.apiRequest(url, {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+            } else {
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            }
         } catch (error) {
             console.error(`Error updating ${table}/${id}:`, error);
             throw error;
@@ -164,15 +190,23 @@ const API = {
             `tables/${table}/${id}`;
         
         try {
-            const response = await fetch(url, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
+            // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+            if (typeof window.apiRequest === 'function') {
+                return await window.apiRequest(url, {
+                    method: 'PATCH',
+                    body: JSON.stringify(data)
+                });
+            } else {
+                const response = await fetch(url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            }
         } catch (error) {
             console.error(`Error patching ${table}/${id}:`, error);
             throw error;
@@ -186,11 +220,18 @@ const API = {
             `tables/${table}/${id}`;
         
         try {
-            const response = await fetch(url, {
-                method: 'DELETE'
-            });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return true;
+            // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+            if (typeof window.apiRequest === 'function') {
+                return await window.apiRequest(url, {
+                    method: 'DELETE'
+                });
+            } else {
+                const response = await fetch(url, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return true;
+            }
         } catch (error) {
             console.error(`Error deleting ${table}/${id}:`, error);
             throw error;
