@@ -18,8 +18,9 @@ window.API_CONFIG = {
 window.getBaseUrl = function() {
     // En production sur Render, on utilise toujours le nouveau backend
     if (typeof window !== 'undefined' && window.location && window.location.hostname.includes('onrender.com')) {
-        // L'URL du backend sur Render sera hope-gestion-backend.onrender.com
-        const backendUrl = window.location.hostname.replace('hope-gestion-frontend', 'hope-gestion-backend');
+        // L'URL du backend sur Render sera hopegestion-backend.onrender.com
+        // Note: le frontend est hopegestion.onrender.com et le backend hopegestion-backend.onrender.com
+        const backendUrl = window.location.hostname.replace('hopegestion', 'hopegestion-backend');
         console.log('Environnement Render détecté, URL du backend:', `https://${backendUrl}/api`);
         return `https://${backendUrl}/api`;
     }
