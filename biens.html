@@ -280,8 +280,12 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeModal('addBienModal')">Annuler</button>
-                <button class="btn-primary" onclick="saveBien()">Enregistrer</button>
+                <button class="btn-secondary" onclick="closeModal('addBienModal')">
+                    <span>Annuler</span>
+                </button>
+                <button class="btn-primary" onclick="saveBien()">
+                    <span>Enregistrer</span>
+                </button>
             </div>
         </div>
     </div>
@@ -298,8 +302,12 @@
                 <input type="hidden" id="deleteBienId">
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeModal('deleteModal')">Annuler</button>
-                <button class="btn-danger" onclick="confirmDeleteBien()">Supprimer</button>
+                <button class="btn-secondary" onclick="closeModal('deleteModal')">
+                    <span>Annuler</span>
+                </button>
+                <button class="btn-danger" onclick="confirmDeleteBien()">
+                    <span>Supprimer</span>
+                </button>
             </div>
         </div>
     </div>
