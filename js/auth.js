@@ -99,88 +99,121 @@ async function loginAsDemo(role) {
     // Simulate async operation
     setTimeout(async () => {
         try {
-            // Check if demo user exists in database
-            const url = window.buildUrl ? 
-                window.buildUrl('users', null, {search: demoAccount.email}) : 
-                `${API_BASE}/users?search=${demoAccount.email}`;
-            
-            console.log('URL de requête:', url);
-            
-            // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
-            const data = window.apiRequest ? 
-                await window.apiRequest(url) : 
-                await fetch(url).then(res => {
-                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                    return res.json();
-                });
-            
-            let userId;
-            
-            if (data.data && data.data.length > 0) {
-                // User exists
-                userId = data.data[0].id;
+            // En mode simulation, on utilise directement les données de simulation
+            if (window.API_CONFIG && window.API_CONFIG.SIMULATION_MODE) {
+                console.log('Mode simulation activé - connexion directe');
+                
+                // Trouver l'utilisateur dans les données de simulation
+                const userData = window.SIMULATION_DATA.users.find(user => 
+                    user.email === demoAccount.email && user.role === demoAccount.role
+                );
+                
+                if (userData) {
+                    // Save session
+                    saveUserSession({
+                        id: userData.id,
+                        email: userData.email,
+                        nom: userData.nom,
+                        prenom: userData.prenom,
+                        role: userData.role
+                    });
+                    
+                    showAlert('Connexion réussie ! Redirection...', 'success');
+                    
+                    // Redirect based on role
+                    setTimeout(() => {
+                        if (userData.role === 'locataire') {
+                            window.location.href = 'portail-locataire.html';
+                        } else {
+                            window.location.href = 'dashboard.html';
+                        }
+                    }, 1000);
+                } else {
+                    throw new Error('Utilisateur de démonstration non trouvé');
+                }
             } else {
-                // Create demo user
-                const createUserUrl = window.buildUrl ? 
-                    window.buildUrl('users') : 
-                    `${API_BASE}/users`;
+                // Mode normal - appel API
+                const url = window.buildUrl ? 
+                    window.buildUrl('users', null, {search: demoAccount.email}) : 
+                    `${API_BASE}/users?search=${demoAccount.email}`;
+                
+                console.log('URL de requête:', url);
                 
                 // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
-                const createdUser = window.apiRequest ? 
-                    await window.apiRequest(createUserUrl, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            email: demoAccount.email,
-                            password: btoa(demoAccount.password), // Simple encoding
-                            nom: demoAccount.nom,
-                            prenom: demoAccount.prenom,
-                            telephone: '+229 XX XX XX XX',
-                            role: demoAccount.role,
-                            actif: true
-                        })
-                    }) : 
-                    await fetch(createUserUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            email: demoAccount.email,
-                            password: btoa(demoAccount.password), // Simple encoding
-                            nom: demoAccount.nom,
-                            prenom: demoAccount.prenom,
-                            telephone: '+229 XX XX XX XX',
-                            role: demoAccount.role,
-                            actif: true
-                        })
-                    }).then(res => {
+                const data = window.apiRequest ? 
+                    await window.apiRequest(url) : 
+                    await fetch(url).then(res => {
                         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                         return res.json();
                     });
                 
-                userId = createdUser.id || createdUser.insertId; // Handle both API formats
-            }
-            
-            // Save session
-            saveUserSession({
-                id: userId,
-                email: demoAccount.email,
-                nom: demoAccount.nom,
-                prenom: demoAccount.prenom,
-                role: demoAccount.role
-            });
-            
-            showAlert('Connexion réussie ! Redirection...', 'success');
-            
-            // Redirect based on role
-            setTimeout(() => {
-                if (demoAccount.role === 'locataire') {
-                    window.location.href = 'portail-locataire.html';
+                let userId;
+                
+                if (data.data && data.data.length > 0) {
+                    // User exists
+                    userId = data.data[0].id;
                 } else {
-                    window.location.href = 'dashboard.html';
+                    // Create demo user
+                    const createUserUrl = window.buildUrl ? 
+                        window.buildUrl('users') : 
+                        `${API_BASE}/users`;
+                    
+                    // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+                    const createdUser = window.apiRequest ? 
+                        await window.apiRequest(createUserUrl, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                email: demoAccount.email,
+                                password: btoa(demoAccount.password), // Simple encoding
+                                nom: demoAccount.nom,
+                                prenom: demoAccount.prenom,
+                                telephone: '+229 XX XX XX XX',
+                                role: demoAccount.role,
+                                actif: true
+                            })
+                        }) : 
+                        await fetch(createUserUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                email: demoAccount.email,
+                                password: btoa(demoAccount.password), // Simple encoding
+                                nom: demoAccount.nom,
+                                prenom: demoAccount.prenom,
+                                telephone: '+229 XX XX XX XX',
+                                role: demoAccount.role,
+                                actif: true
+                            })
+                        }).then(res => {
+                            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                            return res.json();
+                        });
+                    
+                    userId = createdUser.id || createdUser.insertId; // Handle both API formats
                 }
-            }, 1000);
-            
+                
+                // Save session
+                saveUserSession({
+                    id: userId,
+                    email: demoAccount.email,
+                    nom: demoAccount.nom,
+                    prenom: demoAccount.prenom,
+                    role: demoAccount.role
+                });
+                
+                showAlert('Connexion réussie ! Redirection...', 'success');
+                
+                // Redirect based on role
+                setTimeout(() => {
+                    if (demoAccount.role === 'locataire') {
+                        window.location.href = 'portail-locataire.html';
+                    } else {
+                        window.location.href = 'dashboard.html';
+                    }
+                }, 1000);
+            }
         } catch (error) {
             console.error('Erreur de connexion:', error);
             showAlert(error.message || 'Erreur lors de la connexion. Veuillez réessayer.', 'error');
@@ -199,41 +232,29 @@ if (document.getElementById('loginForm')) {
         showAlert('Connexion en cours...', 'info');
         
         try {
-            // Search for user by email
-            const url = window.buildUrl ? 
-                window.buildUrl('users', null, {search: email}) : 
-                `${API_BASE}/users?search=${email}`;
-            
-            console.log('URL de requête:', url);
-            
-            // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
-            const data = window.apiRequest ? 
-                await window.apiRequest(url) : 
-                await fetch(url).then(res => {
-                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                    return res.json();
-                });
-            
-            if (data.data && data.data.length > 0) {
-                const user = data.data[0];
+            // En mode simulation, on vérifie directement les données
+            if (window.API_CONFIG && window.API_CONFIG.SIMULATION_MODE) {
+                console.log('Mode simulation activé - vérification directe');
                 
-                // Simple password check (in production, use proper hashing)
-                const storedPassword = atob(user.password);
+                // Trouver l'utilisateur dans les données de simulation
+                const userData = window.SIMULATION_DATA.users.find(user => 
+                    user.email === email && atob(btoa(user.password)) === password
+                );
                 
-                if (storedPassword === password) {
-                    if (user.actif) {
+                if (userData) {
+                    if (userData.actif) {
                         saveUserSession({
-                            id: user.id,
-                            email: user.email,
-                            nom: user.nom,
-                            prenom: user.prenom,
-                            role: user.role
+                            id: userData.id,
+                            email: userData.email,
+                            nom: userData.nom,
+                            prenom: userData.prenom,
+                            role: userData.role
                         });
                         
                         showAlert('Connexion réussie ! Redirection...', 'success');
                         
                         setTimeout(() => {
-                            if (user.role === 'locataire') {
+                            if (userData.role === 'locataire') {
                                 window.location.href = 'portail-locataire.html';
                             } else {
                                 window.location.href = 'dashboard.html';
@@ -246,7 +267,55 @@ if (document.getElementById('loginForm')) {
                     showAlert('Email ou mot de passe incorrect', 'error');
                 }
             } else {
-                showAlert('Email ou mot de passe incorrect', 'error');
+                // Mode normal - appel API
+                const url = window.buildUrl ? 
+                    window.buildUrl('users', null, {search: email}) : 
+                    `${API_BASE}/users?search=${email}`;
+                
+                console.log('URL de requête:', url);
+                
+                // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+                const data = window.apiRequest ? 
+                    await window.apiRequest(url) : 
+                    await fetch(url).then(res => {
+                        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                        return res.json();
+                    });
+                
+                if (data.data && data.data.length > 0) {
+                    const user = data.data[0];
+                    
+                    // Simple password check (in production, use proper hashing)
+                    const storedPassword = atob(user.password);
+                    
+                    if (storedPassword === password) {
+                        if (user.actif) {
+                            saveUserSession({
+                                id: user.id,
+                                email: user.email,
+                                nom: user.nom,
+                                prenom: user.prenom,
+                                role: user.role
+                            });
+                            
+                            showAlert('Connexion réussie ! Redirection...', 'success');
+                            
+                            setTimeout(() => {
+                                if (user.role === 'locataire') {
+                                    window.location.href = 'portail-locataire.html';
+                                } else {
+                                    window.location.href = 'dashboard.html';
+                                }
+                            }, 1000);
+                        } else {
+                            showAlert('Votre compte a été désactivé. Contactez l\'administrateur.', 'error');
+                        }
+                    } else {
+                        showAlert('Email ou mot de passe incorrect', 'error');
+                    }
+                } else {
+                    showAlert('Email ou mot de passe incorrect', 'error');
+                }
             }
         } catch (error) {
             console.error('Erreur de connexion:', error);
@@ -280,58 +349,15 @@ if (document.getElementById('registerForm')) {
         showAlert('Création du compte en cours...', 'info');
         
         try {
-            // Check if email already exists
-            const checkUrl = window.buildUrl ? 
-                window.buildUrl('users', null, {search: formData.email}) : 
-                `${API_BASE}/users?search=${formData.email}`;
-            
-            console.log('URL de requête:', checkUrl);
-            
-            // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
-            const checkData = window.apiRequest ? 
-                await window.apiRequest(checkUrl) : 
-                await fetch(checkUrl).then(res => {
-                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                    return res.json();
-                });
-            
-            if (checkData.data && checkData.data.length > 0) {
-                showAlert('Cet email est déjà utilisé', 'error');
-                return;
-            }
-            
-            // Create new user
-            const createUserUrl = window.buildUrl ? 
-                window.buildUrl('users') : 
-                `${API_BASE}/users`;
-            
-            console.log('URL de requête:', createUserUrl);
-            
-            // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
-            const response = window.apiRequest ? 
-                await window.apiRequest(createUserUrl, {
-                    method: 'POST',
-                    body: JSON.stringify(formData)
-                }) : 
-                await fetch(createUserUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                }).then(res => {
-                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                    return res;
-                });
-            
-            if (response.ok || response.id) {
-                const user = response.ok ? await response.json() : response;
+            // En mode simulation, on ne crée pas vraiment de compte
+            if (window.API_CONFIG && window.API_CONFIG.SIMULATION_MODE) {
+                console.log('Mode simulation activé - création simulée');
                 
                 showAlert('Compte créé avec succès ! Redirection...', 'success');
                 
-                // Auto-login
+                // Auto-login avec un utilisateur simulé
                 saveUserSession({
-                    id: user.id || user.insertId, // Handle both API formats
+                    id: Date.now(), // ID unique pour la session
                     email: formData.email,
                     nom: formData.nom,
                     prenom: formData.prenom,
@@ -346,7 +372,74 @@ if (document.getElementById('registerForm')) {
                     }
                 }, 1500);
             } else {
-                throw new Error('Erreur lors de la création du compte');
+                // Mode normal - appel API
+                const checkUrl = window.buildUrl ? 
+                    window.buildUrl('users', null, {search: formData.email}) : 
+                    `${API_BASE}/users?search=${formData.email}`;
+                
+                console.log('URL de requête:', checkUrl);
+                
+                // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+                const checkData = window.apiRequest ? 
+                    await window.apiRequest(checkUrl) : 
+                    await fetch(checkUrl).then(res => {
+                        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                        return res.json();
+                    });
+                
+                if (checkData.data && checkData.data.length > 0) {
+                    showAlert('Cet email est déjà utilisé', 'error');
+                    return;
+                }
+                
+                // Create new user
+                const createUserUrl = window.buildUrl ? 
+                    window.buildUrl('users') : 
+                    `${API_BASE}/users`;
+                
+                console.log('URL de requête:', createUserUrl);
+                
+                // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+                const response = window.apiRequest ? 
+                    await window.apiRequest(createUserUrl, {
+                        method: 'POST',
+                        body: JSON.stringify(formData)
+                    }) : 
+                    await fetch(createUserUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    }).then(res => {
+                        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                        return res;
+                    });
+                
+                if (response.ok || response.id) {
+                    const user = response.ok ? await response.json() : response;
+                    
+                    showAlert('Compte créé avec succès ! Redirection...', 'success');
+                    
+                    // Auto-login
+                    saveUserSession({
+                        id: user.id || user.insertId, // Handle both API formats
+                        email: formData.email,
+                        nom: formData.nom,
+                        prenom: formData.prenom,
+                        role: formData.role
+                    });
+                    
+                    setTimeout(() => {
+                        if (formData.role === 'locataire') {
+                            window.location.href = 'portail-locataire.html';
+                        } else {
+                            window.location.href = 'dashboard.html';
+                        }
+                    }, 1500);
+                } else {
+                    throw new Error('Erreur lors de la création du compte');
+                }
             }
         } catch (error) {
             console.error('Erreur d\'inscription:', error);

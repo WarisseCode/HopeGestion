@@ -7,6 +7,9 @@ window.API_CONFIG = {
     // Pour utiliser le nouveau backend, changer cette valeur à true
     USE_NEW_BACKEND: true,
     
+    // Mode simulation pour le développement - à false en production
+    SIMULATION_MODE: true,
+    
     // URL de base pour le nouveau backend - à modifier selon l'environnement
     BACKEND_BASE_URL: process.env.BACKEND_URL || 'http://localhost:3000/api',
     
@@ -14,8 +17,47 @@ window.API_CONFIG = {
     LEGACY_BASE_URL: 'tables'
 };
 
+// Données de simulation pour le développement
+window.SIMULATION_DATA = {
+    users: [
+        {
+            id: 1,
+            email: 'admin@hopegimmo.bj',
+            password: 'admin123',
+            role: 'admin',
+            nom: 'Administrateur',
+            prenom: 'Système',
+            actif: true
+        },
+        {
+            id: 2,
+            email: 'gestionnaire@hopegimmo.bj',
+            password: 'gest123',
+            role: 'gestionnaire',
+            nom: 'Kouassi',
+            prenom: 'Jean',
+            actif: true
+        },
+        {
+            id: 3,
+            email: 'locataire@hopegimmo.bj',
+            password: 'loc123',
+            role: 'locataire',
+            nom: 'Adjovi',
+            prenom: 'Marie',
+            actif: true
+        }
+    ]
+};
+
 // Fonction pour obtenir l'URL de base appropriée
 window.getBaseUrl = function() {
+    // En mode simulation, on ne fait pas d'appels API
+    if (window.API_CONFIG.SIMULATION_MODE) {
+        console.log('Mode simulation activé - pas d\'appels API');
+        return null;
+    }
+    
     // En production sur Render, on utilise toujours le nouveau backend
     if (typeof window !== 'undefined' && window.location && window.location.hostname.includes('onrender.com')) {
         // L'URL du backend sur Render sera hopegestion-backend.onrender.com
@@ -31,6 +73,12 @@ window.getBaseUrl = function() {
 
 // Fonction pour construire l'URL complète
 window.buildUrl = function(table, id = null, params = {}) {
+    // En mode simulation, on ne construit pas d'URL
+    if (window.API_CONFIG.SIMULATION_MODE) {
+        console.log('Mode simulation activé - URL non construite pour:', table, id, params);
+        return null;
+    }
+    
     const baseUrl = window.getBaseUrl();
     let url = window.API_CONFIG.USE_NEW_BACKEND ? 
         `${baseUrl}/tables/${table}` : 
@@ -52,6 +100,41 @@ window.buildUrl = function(table, id = null, params = {}) {
 
 // Fonction utilitaire pour effectuer des requêtes avec gestion d'erreurs améliorée
 window.apiRequest = async function(url, options = {}) {
+    // En mode simulation, retourner des données simulées
+    if (window.API_CONFIG.SIMULATION_MODE) {
+        console.log('Mode simulation - requête simulée:', url, options);
+        
+        // Simulation d'un délai réseau
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Extraire la table de l'URL pour la simulation
+        if (url && url.includes('/tables/')) {
+            const tableMatch = url.match(/\/tables\/([^\/\?]+)/);
+            if (tableMatch && tableMatch[1]) {
+                const table = tableMatch[1];
+                
+                // Si c'est une recherche
+                if (url.includes('search=')) {
+                    const searchMatch = url.match(/search=([^&]+)/);
+                    if (searchMatch && searchMatch[1]) {
+                        const searchTerm = decodeURIComponent(searchMatch[1]);
+                        const filteredData = window.SIMULATION_DATA[table]?.filter(item => 
+                            item.email === searchTerm
+                        ) || [];
+                        
+                        return { data: filteredData };
+                    }
+                }
+                
+                // Retourner toutes les données de la table
+                return { data: window.SIMULATION_DATA[table] || [] };
+            }
+        }
+        
+        // Par défaut, retourner des données vides
+        return { data: [] };
+    }
+    
     console.log('Effectuant une requête vers:', url);
     
     try {
