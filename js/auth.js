@@ -85,7 +85,7 @@ function logout() {
     window.location.href = 'login.html';
 }
 
-// Login as demo account
+// Login as demo account - VERSION SIMPLIFIEE SANS APPELS RESEAU
 async function loginAsDemo(role) {
     const demoAccount = DEMO_ACCOUNTS[role];
     
@@ -96,134 +96,36 @@ async function loginAsDemo(role) {
     
     showAlert(`Connexion en tant que ${demoAccount.nom}...`, 'info');
     
-    // Simulate async operation
-    setTimeout(async () => {
-        try {
-            // En mode simulation, on utilise directement les données de simulation
-            if (window.API_CONFIG && window.API_CONFIG.SIMULATION_MODE) {
-                console.log('Mode simulation activé - connexion directe');
-                
-                // Trouver l'utilisateur dans les données de simulation
-                const userData = window.SIMULATION_DATA.users.find(user => 
-                    user.email === demoAccount.email && user.role === demoAccount.role
-                );
-                
-                if (userData) {
-                    // Save session
-                    saveUserSession({
-                        id: userData.id,
-                        email: userData.email,
-                        nom: userData.nom,
-                        prenom: userData.prenom,
-                        role: userData.role
-                    });
-                    
-                    showAlert('Connexion réussie ! Redirection...', 'success');
-                    
-                    // Redirect based on role
-                    setTimeout(() => {
-                        if (userData.role === 'locataire') {
-                            window.location.href = 'portail-locataire.html';
-                        } else {
-                            window.location.href = 'dashboard.html';
-                        }
-                    }, 1000);
-                } else {
-                    throw new Error('Utilisateur de démonstration non trouvé');
-                }
+    // Simulation directe sans aucun appel réseau
+    setTimeout(() => {
+        // Trouver l'utilisateur dans les données de simulation
+        const userData = {
+            id: role === 'admin' ? 1 : role === 'gestionnaire' ? 2 : 3,
+            email: demoAccount.email,
+            nom: demoAccount.nom,
+            prenom: demoAccount.prenom,
+            role: demoAccount.role
+        };
+        
+        // Save session
+        saveUserSession(userData);
+        
+        showAlert('Connexion réussie ! Redirection...', 'success');
+        
+        // Redirect based on role
+        setTimeout(() => {
+            if (demoAccount.role === 'locataire') {
+                window.location.href = 'portail-locataire.html';
             } else {
-                // Mode normal - appel API
-                const url = window.buildUrl ? 
-                    window.buildUrl('users', null, {search: demoAccount.email}) : 
-                    `${API_BASE}/users?search=${demoAccount.email}`;
-                
-                console.log('URL de requête:', url);
-                
-                // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
-                const data = window.apiRequest ? 
-                    await window.apiRequest(url) : 
-                    await fetch(url).then(res => {
-                        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                        return res.json();
-                    });
-                
-                let userId;
-                
-                if (data.data && data.data.length > 0) {
-                    // User exists
-                    userId = data.data[0].id;
-                } else {
-                    // Create demo user
-                    const createUserUrl = window.buildUrl ? 
-                        window.buildUrl('users') : 
-                        `${API_BASE}/users`;
-                    
-                    // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
-                    const createdUser = window.apiRequest ? 
-                        await window.apiRequest(createUserUrl, {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                email: demoAccount.email,
-                                password: btoa(demoAccount.password), // Simple encoding
-                                nom: demoAccount.nom,
-                                prenom: demoAccount.prenom,
-                                telephone: '+229 XX XX XX XX',
-                                role: demoAccount.role,
-                                actif: true
-                            })
-                        }) : 
-                        await fetch(createUserUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                email: demoAccount.email,
-                                password: btoa(demoAccount.password), // Simple encoding
-                                nom: demoAccount.nom,
-                                prenom: demoAccount.prenom,
-                                telephone: '+229 XX XX XX XX',
-                                role: demoAccount.role,
-                                actif: true
-                            })
-                        }).then(res => {
-                            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                            return res.json();
-                        });
-                    
-                    userId = createdUser.id || createdUser.insertId; // Handle both API formats
-                }
-                
-                // Save session
-                saveUserSession({
-                    id: userId,
-                    email: demoAccount.email,
-                    nom: demoAccount.nom,
-                    prenom: demoAccount.prenom,
-                    role: demoAccount.role
-                });
-                
-                showAlert('Connexion réussie ! Redirection...', 'success');
-                
-                // Redirect based on role
-                setTimeout(() => {
-                    if (demoAccount.role === 'locataire') {
-                        window.location.href = 'portail-locataire.html';
-                    } else {
-                        window.location.href = 'dashboard.html';
-                    }
-                }, 1000);
+                window.location.href = 'dashboard.html';
             }
-        } catch (error) {
-            console.error('Erreur de connexion:', error);
-            showAlert(error.message || 'Erreur lors de la connexion. Veuillez réessayer.', 'error');
-        }
+        }, 1000);
     }, 500);
 }
 
-// Login form handler
+// Login form handler - VERSION SIMPLIFIEE SANS APPELS RESEAU
 if (document.getElementById('loginForm')) {
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
         e.preventDefault();
         
         const email = document.getElementById('email').value;
@@ -231,220 +133,90 @@ if (document.getElementById('loginForm')) {
         
         showAlert('Connexion en cours...', 'info');
         
-        try {
-            // En mode simulation, on vérifie directement les données
-            if (window.API_CONFIG && window.API_CONFIG.SIMULATION_MODE) {
-                console.log('Mode simulation activé - vérification directe');
-                
-                // Trouver l'utilisateur dans les données de simulation
-                const userData = window.SIMULATION_DATA.users.find(user => 
-                    user.email === email && atob(btoa(user.password)) === password
-                );
-                
-                if (userData) {
-                    if (userData.actif) {
-                        saveUserSession({
-                            id: userData.id,
-                            email: userData.email,
-                            nom: userData.nom,
-                            prenom: userData.prenom,
-                            role: userData.role
-                        });
-                        
-                        showAlert('Connexion réussie ! Redirection...', 'success');
-                        
-                        setTimeout(() => {
-                            if (userData.role === 'locataire') {
-                                window.location.href = 'portail-locataire.html';
-                            } else {
-                                window.location.href = 'dashboard.html';
-                            }
-                        }, 1000);
-                    } else {
-                        showAlert('Votre compte a été désactivé. Contactez l\'administrateur.', 'error');
-                    }
-                } else {
-                    showAlert('Email ou mot de passe incorrect', 'error');
-                }
-            } else {
-                // Mode normal - appel API
-                const url = window.buildUrl ? 
-                    window.buildUrl('users', null, {search: email}) : 
-                    `${API_BASE}/users?search=${email}`;
-                
-                console.log('URL de requête:', url);
-                
-                // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
-                const data = window.apiRequest ? 
-                    await window.apiRequest(url) : 
-                    await fetch(url).then(res => {
-                        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                        return res.json();
-                    });
-                
-                if (data.data && data.data.length > 0) {
-                    const user = data.data[0];
-                    
-                    // Simple password check (in production, use proper hashing)
-                    const storedPassword = atob(user.password);
-                    
-                    if (storedPassword === password) {
-                        if (user.actif) {
-                            saveUserSession({
-                                id: user.id,
-                                email: user.email,
-                                nom: user.nom,
-                                prenom: user.prenom,
-                                role: user.role
-                            });
-                            
-                            showAlert('Connexion réussie ! Redirection...', 'success');
-                            
-                            setTimeout(() => {
-                                if (user.role === 'locataire') {
-                                    window.location.href = 'portail-locataire.html';
-                                } else {
-                                    window.location.href = 'dashboard.html';
-                                }
-                            }, 1000);
-                        } else {
-                            showAlert('Votre compte a été désactivé. Contactez l\'administrateur.', 'error');
-                        }
-                    } else {
-                        showAlert('Email ou mot de passe incorrect', 'error');
-                    }
-                } else {
-                    showAlert('Email ou mot de passe incorrect', 'error');
-                }
+        // Simulation directe sans aucun appel réseau
+        setTimeout(() => {
+            // Vérifier si c'est un compte de démonstration
+            let userData = null;
+            
+            if (email === 'admin@hopegimmo.bj' && password === 'admin123') {
+                userData = {
+                    id: 1,
+                    email: 'admin@hopegimmo.bj',
+                    nom: 'Administrateur',
+                    prenom: 'Système',
+                    role: 'admin'
+                };
+            } else if (email === 'gestionnaire@hopegimmo.bj' && password === 'gest123') {
+                userData = {
+                    id: 2,
+                    email: 'gestionnaire@hopegimmo.bj',
+                    nom: 'Kouassi',
+                    prenom: 'Jean',
+                    role: 'gestionnaire'
+                };
+            } else if (email === 'locataire@hopegimmo.bj' && password === 'loc123') {
+                userData = {
+                    id: 3,
+                    email: 'locataire@hopegimmo.bj',
+                    nom: 'Adjovi',
+                    prenom: 'Marie',
+                    role: 'locataire'
+                };
             }
-        } catch (error) {
-            console.error('Erreur de connexion:', error);
-            showAlert(error.message || 'Erreur lors de la connexion. Veuillez réessayer.', 'error');
-        }
-    });
-}
-
-// Registration form handler
-if (document.getElementById('registerForm')) {
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const formData = {
-            email: document.getElementById('email').value,
-            password: btoa(document.getElementById('password').value), // Simple encoding
-            nom: document.getElementById('nom').value,
-            prenom: document.getElementById('prenom').value,
-            telephone: document.getElementById('telephone').value,
-            role: document.getElementById('role').value,
-            actif: true
-        };
-        
-        // Validate password confirmation
-        const confirmPassword = document.getElementById('confirm-password').value;
-        if (atob(formData.password) !== confirmPassword) {
-            showAlert('Les mots de passe ne correspondent pas', 'error');
-            return;
-        }
-        
-        showAlert('Création du compte en cours...', 'info');
-        
-        try {
-            // En mode simulation, on ne crée pas vraiment de compte
-            if (window.API_CONFIG && window.API_CONFIG.SIMULATION_MODE) {
-                console.log('Mode simulation activé - création simulée');
-                
-                showAlert('Compte créé avec succès ! Redirection...', 'success');
-                
-                // Auto-login avec un utilisateur simulé
-                saveUserSession({
-                    id: Date.now(), // ID unique pour la session
-                    email: formData.email,
-                    nom: formData.nom,
-                    prenom: formData.prenom,
-                    role: formData.role
-                });
+            
+            if (userData) {
+                saveUserSession(userData);
+                showAlert('Connexion réussie ! Redirection...', 'success');
                 
                 setTimeout(() => {
-                    if (formData.role === 'locataire') {
+                    if (userData.role === 'locataire') {
                         window.location.href = 'portail-locataire.html';
                     } else {
                         window.location.href = 'dashboard.html';
                     }
-                }, 1500);
+                }, 1000);
             } else {
-                // Mode normal - appel API
-                const checkUrl = window.buildUrl ? 
-                    window.buildUrl('users', null, {search: formData.email}) : 
-                    `${API_BASE}/users?search=${formData.email}`;
-                
-                console.log('URL de requête:', checkUrl);
-                
-                // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
-                const checkData = window.apiRequest ? 
-                    await window.apiRequest(checkUrl) : 
-                    await fetch(checkUrl).then(res => {
-                        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                        return res.json();
-                    });
-                
-                if (checkData.data && checkData.data.length > 0) {
-                    showAlert('Cet email est déjà utilisé', 'error');
-                    return;
-                }
-                
-                // Create new user
-                const createUserUrl = window.buildUrl ? 
-                    window.buildUrl('users') : 
-                    `${API_BASE}/users`;
-                
-                console.log('URL de requête:', createUserUrl);
-                
-                // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
-                const response = window.apiRequest ? 
-                    await window.apiRequest(createUserUrl, {
-                        method: 'POST',
-                        body: JSON.stringify(formData)
-                    }) : 
-                    await fetch(createUserUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(formData)
-                    }).then(res => {
-                        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                        return res;
-                    });
-                
-                if (response.ok || response.id) {
-                    const user = response.ok ? await response.json() : response;
-                    
-                    showAlert('Compte créé avec succès ! Redirection...', 'success');
-                    
-                    // Auto-login
-                    saveUserSession({
-                        id: user.id || user.insertId, // Handle both API formats
-                        email: formData.email,
-                        nom: formData.nom,
-                        prenom: formData.prenom,
-                        role: formData.role
-                    });
-                    
-                    setTimeout(() => {
-                        if (formData.role === 'locataire') {
-                            window.location.href = 'portail-locataire.html';
-                        } else {
-                            window.location.href = 'dashboard.html';
-                        }
-                    }, 1500);
-                } else {
-                    throw new Error('Erreur lors de la création du compte');
-                }
+                showAlert('Email ou mot de passe incorrect', 'error');
             }
-        } catch (error) {
-            console.error('Erreur d\'inscription:', error);
-            showAlert(error.message || 'Erreur lors de la création du compte. Veuillez réessayer.', 'error');
-        }
+        }, 500);
+    });
+}
+
+// Registration form handler - VERSION SIMPLIFIEE SANS APPELS RESEAU
+if (document.getElementById('registerForm')) {
+    document.getElementById('registerForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        showAlert('Création du compte en cours...', 'info');
+        
+        // Simulation directe sans aucun appel réseau
+        setTimeout(() => {
+            showAlert('Compte créé avec succès ! Redirection...', 'success');
+            
+            // Auto-login avec des données simulées
+            const formData = {
+                email: document.getElementById('email').value,
+                nom: document.getElementById('nom').value,
+                prenom: document.getElementById('prenom').value,
+                role: document.getElementById('role').value
+            };
+            
+            saveUserSession({
+                id: Date.now(),
+                email: formData.email,
+                nom: formData.nom,
+                prenom: formData.prenom,
+                role: formData.role
+            });
+            
+            setTimeout(() => {
+                if (formData.role === 'locataire') {
+                    window.location.href = 'portail-locataire.html';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
+            }, 1500);
+        }, 500);
     });
 }
 
