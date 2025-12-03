@@ -3,7 +3,7 @@
    ============================================= */
 
 // Configuration de l'API
-const API_CONFIG = {
+window.API_CONFIG = {
     // Pour utiliser le nouveau backend, changer cette valeur à true
     USE_NEW_BACKEND: true,
     
@@ -15,7 +15,7 @@ const API_CONFIG = {
 };
 
 // Fonction pour obtenir l'URL de base appropriée
-function getBaseUrl() {
+window.getBaseUrl = function() {
     // En production sur Render, on utilise toujours le nouveau backend
     if (typeof window !== 'undefined' && window.location && window.location.hostname.includes('onrender.com')) {
         // L'URL du backend sur Render sera hope-gestion-backend.onrender.com
@@ -23,13 +23,13 @@ function getBaseUrl() {
         return `https://${backendUrl}/api`;
     }
     
-    return API_CONFIG.USE_NEW_BACKEND ? API_CONFIG.BACKEND_BASE_URL : API_CONFIG.LEGACY_BASE_URL;
-}
+    return window.API_CONFIG.USE_NEW_BACKEND ? window.API_CONFIG.BACKEND_BASE_URL : window.API_CONFIG.LEGACY_BASE_URL;
+};
 
 // Fonction pour construire l'URL complète
-function buildUrl(table, id = null, params = {}) {
-    const baseUrl = getBaseUrl();
-    let url = API_CONFIG.USE_NEW_BACKEND ? 
+window.buildUrl = function(table, id = null, params = {}) {
+    const baseUrl = window.getBaseUrl();
+    let url = window.API_CONFIG.USE_NEW_BACKEND ? 
         `${baseUrl}/tables/${table}` : 
         `${baseUrl}/${table}`;
     
@@ -44,10 +44,10 @@ function buildUrl(table, id = null, params = {}) {
     }
     
     return url;
-}
+};
 
 // Fonction utilitaire pour effectuer des requêtes avec gestion d'erreurs améliorée
-async function apiRequest(url, options = {}) {
+window.apiRequest = async function(url, options = {}) {
     try {
         const response = await fetch(url, {
             ...options,
@@ -76,10 +76,4 @@ async function apiRequest(url, options = {}) {
         }
         throw error;
     }
-}
-
-// Exporter la configuration
-window.API_CONFIG = API_CONFIG;
-window.getBaseUrl = getBaseUrl;
-window.buildUrl = buildUrl;
-window.apiRequest = apiRequest;
+};
