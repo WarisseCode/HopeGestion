@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: hope-gestion-backend
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+  - type: web
+    name: hope-gestion-frontend
+    env: static
+    buildCommand: echo "Building frontend..."
+    staticPublishPath: ./
+    plan: free
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

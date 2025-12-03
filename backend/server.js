@@ -4,10 +4,15 @@ const bodyParser = require('body-parser');
 const db = require('./database/db');
 
 const app = express();
+// Utiliser le port fourni par Render ou 3000 par défaut
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
+// Middleware CORS amélioré pour autoriser toutes les origines
+app.use(cors({
+  origin: true, // Autorise toutes les origines
+  credentials: true // Autorise les cookies/credentials si nécessaire
+}));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 

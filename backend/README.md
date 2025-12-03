@@ -120,6 +120,14 @@ Pour connecter le frontend existant à ce backend :
 - Validation des paramètres d'entrée
 - Gestion des erreurs appropriée
 
+## ☁️ Déploiement sur Render
+
+Ce backend est configuré pour être déployé sur Render. Lors du déploiement :
+
+1. Render utilisera automatiquement le port fourni par la plateforme
+2. La base de données SQLite sera persistée dans le système de fichiers
+3. Les dépendances seront installées automatiquement
+
 ## 📞 Support
 
 Pour toute question concernant le backend, consultez ce README ou contactez l'équipe de développement.

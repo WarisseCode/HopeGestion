@@ -103,8 +103,11 @@ async function loginAsDemo(role) {
             const url = window.buildUrl ? 
                 window.buildUrl('users', null, {search: demoAccount.email}) : 
                 `${API_BASE}/users?search=${demoAccount.email}`;
-            const response = await fetch(url);
-            const data = await response.json();
+            
+            // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+            const data = window.apiRequest ? 
+                await window.apiRequest(url) : 
+                await fetch(url).then(res => res.json());
             
             let userId;
             
@@ -116,23 +119,37 @@ async function loginAsDemo(role) {
                 const createUserUrl = window.buildUrl ? 
                     window.buildUrl('users') : 
                     `${API_BASE}/users`;
-                const createResponse = await fetch(createUserUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: demoAccount.email,
-                        password: btoa(demoAccount.password), // Simple encoding
-                        nom: demoAccount.nom,
-                        prenom: demoAccount.prenom,
-                        telephone: '+229 XX XX XX XX',
-                        role: demoAccount.role,
-                        actif: true
-                    })
-                });
                 
-                const createdUser = await createResponse.json();
+                // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+                const createdUser = window.apiRequest ? 
+                    await window.apiRequest(createUserUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            email: demoAccount.email,
+                            password: btoa(demoAccount.password), // Simple encoding
+                            nom: demoAccount.nom,
+                            prenom: demoAccount.prenom,
+                            telephone: '+229 XX XX XX XX',
+                            role: demoAccount.role,
+                            actif: true
+                        })
+                    }) : 
+                    await fetch(createUserUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: demoAccount.email,
+                            password: btoa(demoAccount.password), // Simple encoding
+                            nom: demoAccount.nom,
+                            prenom: demoAccount.prenom,
+                            telephone: '+229 XX XX XX XX',
+                            role: demoAccount.role,
+                            actif: true
+                        })
+                    }).then(res => res.json());
+                
                 userId = createdUser.id || createdUser.insertId; // Handle both API formats
             }
             
@@ -158,7 +175,7 @@ async function loginAsDemo(role) {
             
         } catch (error) {
             console.error('Erreur de connexion:', error);
-            showAlert('Erreur lors de la connexion. Veuillez réessayer.', 'error');
+            showAlert(error.message || 'Erreur lors de la connexion. Veuillez réessayer.', 'error');
         }
     }, 500);
 }
@@ -178,8 +195,11 @@ if (document.getElementById('loginForm')) {
             const url = window.buildUrl ? 
                 window.buildUrl('users', null, {search: email}) : 
                 `${API_BASE}/users?search=${email}`;
-            const response = await fetch(url);
-            const data = await response.json();
+            
+            // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+            const data = window.apiRequest ? 
+                await window.apiRequest(url) : 
+                await fetch(url).then(res => res.json());
             
             if (data.data && data.data.length > 0) {
                 const user = data.data[0];
@@ -217,7 +237,7 @@ if (document.getElementById('loginForm')) {
             }
         } catch (error) {
             console.error('Erreur de connexion:', error);
-            showAlert('Erreur lors de la connexion. Veuillez réessayer.', 'error');
+            showAlert(error.message || 'Erreur lors de la connexion. Veuillez réessayer.', 'error');
         }
     });
 }
@@ -251,8 +271,11 @@ if (document.getElementById('registerForm')) {
             const checkUrl = window.buildUrl ? 
                 window.buildUrl('users', null, {search: formData.email}) : 
                 `${API_BASE}/users?search=${formData.email}`;
-            const checkResponse = await fetch(checkUrl);
-            const checkData = await checkResponse.json();
+            
+            // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+            const checkData = window.apiRequest ? 
+                await window.apiRequest(checkUrl) : 
+                await fetch(checkUrl).then(res => res.json());
             
             if (checkData.data && checkData.data.length > 0) {
                 showAlert('Cet email est déjà utilisé', 'error');
@@ -263,16 +286,23 @@ if (document.getElementById('registerForm')) {
             const createUserUrl = window.buildUrl ? 
                 window.buildUrl('users') : 
                 `${API_BASE}/users`;
-            const response = await fetch(createUserUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
             
-            if (response.ok) {
-                const user = await response.json();
+            // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
+            const response = window.apiRequest ? 
+                await window.apiRequest(createUserUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                }) : 
+                await fetch(createUserUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+            
+            if (response.ok || response.id) {
+                const user = response.ok ? await response.json() : response;
                 
                 showAlert('Compte créé avec succès ! Redirection...', 'success');
                 
@@ -297,7 +327,7 @@ if (document.getElementById('registerForm')) {
             }
         } catch (error) {
             console.error('Erreur d\'inscription:', error);
-            showAlert('Erreur lors de la création du compte. Veuillez réessayer.', 'error');
+            showAlert(error.message || 'Erreur lors de la création du compte. Veuillez réessayer.', 'error');
         }
     });
 }
