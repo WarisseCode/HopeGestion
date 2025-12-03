@@ -104,6 +104,8 @@ async function loginAsDemo(role) {
                 window.buildUrl('users', null, {search: demoAccount.email}) : 
                 `${API_BASE}/users?search=${demoAccount.email}`;
             
+            console.log('URL de requête:', url);
+            
             // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
             const data = window.apiRequest ? 
                 await window.apiRequest(url) : 
@@ -202,6 +204,8 @@ if (document.getElementById('loginForm')) {
                 window.buildUrl('users', null, {search: email}) : 
                 `${API_BASE}/users?search=${email}`;
             
+            console.log('URL de requête:', url);
+            
             // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
             const data = window.apiRequest ? 
                 await window.apiRequest(url) : 
@@ -281,6 +285,8 @@ if (document.getElementById('registerForm')) {
                 window.buildUrl('users', null, {search: formData.email}) : 
                 `${API_BASE}/users?search=${formData.email}`;
             
+            console.log('URL de requête:', checkUrl);
+            
             // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
             const checkData = window.apiRequest ? 
                 await window.apiRequest(checkUrl) : 
@@ -298,6 +304,8 @@ if (document.getElementById('registerForm')) {
             const createUserUrl = window.buildUrl ? 
                 window.buildUrl('users') : 
                 `${API_BASE}/users`;
+            
+            console.log('URL de requête:', createUserUrl);
             
             // Utiliser la nouvelle fonction apiRequest pour une meilleure gestion des erreurs
             const response = window.apiRequest ? 
