@@ -262,30 +262,50 @@ async function loadUsers() {
 // Fonction de connexion
 async function login(email, password) {
     try {
-        showLoading(true);
+        // Afficher le chargement
+        showAlert('Connexion en cours...', 'info');
         
         // En mode simulation, vérifier les identifiants dans les données simulées
         if (window.API_CONFIG.SIMULATION_MODE) {
-            const users = await loadUsers();
-            const user = users.find(u => u.email === email && u.password === password);
-            
-            if (user) {
-                // Stocker les informations de l'utilisateur
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                localStorage.setItem('isLoggedIn', 'true');
+            // Utiliser les comptes de démonstration
+            if (email === 'admin@hopegimmo.bj' && password === 'admin123') {
+                const userData = {
+                    id: 1,
+                    email: 'admin@hopegimmo.bj',
+                    nom: 'Administrateur',
+                    prenom: 'Système',
+                    role: 'admin'
+                };
                 
-                showLoading(false);
-                showToast('Connexion réussie!', 'success');
+                saveUserSession(userData);
+                showAlert('Connexion réussie ! Redirection...', 'success');
+                return true;
+            } else if (email === 'gestionnaire@hopegimmo.bj' && password === 'gest123') {
+                const userData = {
+                    id: 2,
+                    email: 'gestionnaire@hopegimmo.bj',
+                    nom: 'Kouassi',
+                    prenom: 'Jean',
+                    role: 'gestionnaire'
+                };
                 
-                // Rediriger vers le dashboard après un court délai
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1000);
+                saveUserSession(userData);
+                showAlert('Connexion réussie ! Redirection...', 'success');
+                return true;
+            } else if (email === 'locataire@hopegimmo.bj' && password === 'loc123') {
+                const userData = {
+                    id: 3,
+                    email: 'locataire@hopegimmo.bj',
+                    nom: 'Adjovi',
+                    prenom: 'Marie',
+                    role: 'locataire'
+                };
                 
+                saveUserSession(userData);
+                showAlert('Connexion réussie ! Redirection...', 'success');
                 return true;
             } else {
-                showLoading(false);
-                showToast('Identifiants incorrects', 'error');
+                showAlert('Email ou mot de passe incorrect', 'error');
                 return false;
             }
         }
@@ -299,28 +319,17 @@ async function login(email, password) {
             // Vérifier le mot de passe (en production, cela devrait être fait côté serveur)
             if (user.password === password) {
                 // Stocker les informations de l'utilisateur
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                localStorage.setItem('isLoggedIn', 'true');
-                
-                showLoading(false);
-                showToast('Connexion réussie!', 'success');
-                
-                // Rediriger vers le dashboard après un court délai
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1000);
-                
+                saveUserSession(user);
+                showAlert('Connexion réussie ! Redirection...', 'success');
                 return true;
             }
         }
         
-        showLoading(false);
-        showToast('Identifiants incorrects', 'error');
+        showAlert('Email ou mot de passe incorrect', 'error');
         return false;
     } catch (error) {
         console.error('Erreur de connexion:', error);
-        showLoading(false);
-        showToast('Erreur de connexion: ' + error.message, 'error');
+        showAlert('Erreur de connexion: ' + error.message, 'error');
         return false;
     }
 }

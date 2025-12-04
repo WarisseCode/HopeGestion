@@ -42,6 +42,9 @@ async function loadDashboardData() {
         showLoadingSpinner('recentPaiements');
         showLoadingSpinner('recentTickets');
         
+        // Attendre un court délai pour s'assurer que les spinners sont visibles
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Charger toutes les données en parallèle
         const [biensResponse, paiementsResponse, ticketsResponse] = await Promise.all([
             apiRequest(buildUrl('biens')),
@@ -143,7 +146,7 @@ function updateStats(biens, paiements) {
     const biensDisponibles = biens.filter(bien => bien.statut === 'Disponible').length;
     const revenusMensuels = paiements
         .filter(p => p.statut === 'Validé')
-        .reduce((sum, paiement) => sum + paiements.montant, 0);
+        .reduce((sum, paiement) => sum + (paiement.montant || 0), 0);
     const ticketsOuverts = 2; // Simulation
     
     document.getElementById('totalBiens').textContent = totalBiens;
@@ -165,7 +168,12 @@ function initializeCharts(biens, paiements) {
     
     const typeChartCtx = document.getElementById('biensTypeChart');
     if (typeChartCtx) {
-        new Chart(typeChartCtx, {
+        // Détruire le graphique existant s'il y en a un
+        if (typeChartCtx.chart) {
+            typeChartCtx.chart.destroy();
+        }
+        
+        typeChartCtx.chart = new Chart(typeChartCtx, {
             type: 'doughnut',
             data: {
                 labels: typeLabels,
@@ -194,7 +202,12 @@ function initializeCharts(biens, paiements) {
     // Graphique des revenus mensuels
     const revenusCtx = document.getElementById('revenusChart');
     if (revenusCtx) {
-        new Chart(revenusCtx, {
+        // Détruire le graphique existant s'il y en a un
+        if (revenusCtx.chart) {
+            revenusCtx.chart.destroy();
+        }
+        
+        revenusCtx.chart = new Chart(revenusCtx, {
             type: 'line',
             data: {
                 labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
@@ -217,6 +230,114 @@ function initializeCharts(biens, paiements) {
             }
         });
     }
+}
+
+// Rendre les biens
+function renderBiens(biens) {
+    const tbody = document.getElementById('biensTableBody');
+    if (!tbody) return;
+    
+    if (biens.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center">
+                    <div class="empty-state">
+                        <i class="fas fa-home fa-3x"></i>
+                        <h3>Aucun bien trouvé</h3>
+                        <p>Commencez par ajouter votre premier bien immobilier</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = biens.map(bien => `
+        <tr>
+            <td>${bien.titre}</td>
+            <td>${bien.type}</td>
+            <td>${bien.ville}</td>
+            <td>${formatCurrency(bien.prix_location)}</td>
+            <td>
+                <span class="status-badge status-${bien.statut.toLowerCase().replace(' ', '-')}">
+                    ${bien.statut}
+                </span>
+            </td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn-icon btn-view" onclick="viewBien(${bien.id})" data-tooltip="Voir les détails">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-icon btn-edit" onclick="editBien(${bien.id})" data-tooltip="Modifier">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon btn-delete" onclick="deleteBien(${bien.id})" data-tooltip="Supprimer">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Rendre les paiements récents
+function renderRecentPaiements(paiements) {
+    const container = document.getElementById('recentPaiements');
+    if (!container) return;
+    
+    if (paiements.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-receipt fa-3x"></i>
+                <h3>Aucun paiement récent</h3>
+                <p>Les paiements apparaîtront ici une fois enregistrés</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = paiements.map(paiement => `
+        <div class="activity-item">
+            <div class="activity-icon bg-success">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <div class="activity-content">
+                <h4>${paiement.reference}</h4>
+                <p>${formatCurrency(paiement.montant)} - ${formatDate(paiement.date_paiement)}</p>
+                <span class="status-badge status-${paiement.statut.toLowerCase()}">${paiement.statut}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Rendre les tickets récents
+function renderRecentTickets(tickets) {
+    const container = document.getElementById('recentTickets');
+    if (!container) return;
+    
+    if (tickets.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-ticket-alt fa-3x"></i>
+                <h3>Aucun ticket récent</h3>
+                <p>Les tickets de maintenance apparaîtront ici</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = tickets.map(ticket => `
+        <div class="activity-item">
+            <div class="activity-icon bg-warning">
+                <i class="fas fa-ticket-alt"></i>
+            </div>
+            <div class="activity-content">
+                <h4>${ticket.titre}</h4>
+                <p>${ticket.reference} - ${ticket.categorie}</p>
+                <span class="status-badge status-${ticket.statut.toLowerCase().replace(' ', '-')}">${ticket.statut}</span>
+            </div>
+        </div>
+    `).join('');
 }
 
 // Bien actions

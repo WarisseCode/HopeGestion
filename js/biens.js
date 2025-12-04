@@ -2,49 +2,43 @@
    BIENS JAVASCRIPT
    ============================================= */
 
+// Variables globales
+let currentBiens = [];
+let editingBienId = null;
+
 // Check authentication
 requireAuth();
 
-// Get current user
-const currentUser = getCurrentUser();
-
-// Update user info in topbar
-document.addEventListener('DOMContentLoaded', async () => {
-    if (currentUser) {
-        document.getElementById('userName').textContent = `${currentUser.prenom} ${currentUser.nom}`;
-        document.getElementById('userRole').textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
-        
-        // Update avatar
-        const avatar = document.getElementById('userAvatar');
-        if (avatar) {
-            avatar.src = `https://ui-avatars.com/api/?name=${currentUser.prenom}+${currentUser.nom}&background=259B24&color=fff`;
-        }
-    }
+// DOM Content Loaded
+document.addEventListener('DOMContentLoaded', async function() {
+    // Initialize page protection
+    initializePageProtection();
     
-    // Load biens data
+    // Load biens
     await loadBiens();
     
-    // Menu toggle for mobile
-    const menuToggle = document.querySelector('.btn-menu-toggle');
-    const sidebar = document.querySelector('.sidebar');
+    // Setup search
+    setupSearch('searchInput', 'biensTable', [0, 1, 2, 3, 4]);
     
-    if (menuToggle && sidebar) {
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-        });
-    }
+    // Setup form submission
+    document.getElementById('bienForm').addEventListener('submit', handleFormSubmit);
     
-    // Search functionality
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(loadBiens, 300));
-    }
+    // Setup modal close buttons
+    document.querySelectorAll('.btn-close').forEach(button => {
+        button.addEventListener('click', () => closeModal('addBienModal'));
+    });
+    
+    // Setup delete modal close button
+    document.querySelector('#deleteModal .btn-close').addEventListener('click', () => closeModal('deleteModal'));
 });
 
 // Charger les biens
 async function loadBiens() {
     try {
         showLoadingSpinner('biensTableBody');
+        
+        // Attendre un court délai pour s'assurer que les spinners sont visibles
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         const response = await apiRequest(buildUrl('biens'));
         const biens = response.data || response;
@@ -62,7 +56,59 @@ async function loadBiens() {
     }
 }
 
-let currentBiens = [];
+// Obtenir les biens de démonstration
+function getDemoBiens() {
+    return [
+        {
+            id: 1,
+            titre: "Appartement Duplex",
+            type: "appartement",
+            adresse: "123 Rue de l'Indépendance, Cotonou",
+            ville: "Cotonou",
+            superficie: 120,
+            chambres: 3,
+            salles_bain: 2,
+            prix_location: 150000,
+            prix_achat: 25000000,
+            statut: "Disponible",
+            description: "Bel appartement duplex avec vue sur la mer",
+            equipements: ["Climatisation", "Parking", "Balcon"],
+            proprietaire_id: 1
+        },
+        {
+            id: 2,
+            titre: "Villa Moderne",
+            type: "villa",
+            adresse: "456 Avenue de la Liberté, Porto-Novo",
+            ville: "Porto-Novo",
+            superficie: 250,
+            chambres: 5,
+            salles_bain: 4,
+            prix_location: 250000,
+            prix_achat: 45000000,
+            statut: "Occupé",
+            description: "Villa moderne avec jardin et piscine",
+            equipements: ["Piscine", "Jardin", "Garage"],
+            proprietaire_id: 2
+        },
+        {
+            id: 3,
+            titre: "Boutique Commerciale",
+            type: "boutique",
+            adresse: "789 Boulevard Triomphal, Parakou",
+            ville: "Parakou",
+            superficie: 80,
+            chambres: 1,
+            salles_bain: 1,
+            prix_location: 100000,
+            prix_achat: 15000000,
+            statut: "En maintenance",
+            description: "Boutique idéalement située dans le centre-ville",
+            equipements: ["Vitrine", "Stockage", "Électricité industrielle"],
+            proprietaire_id: 3
+        }
+    ];
+}
 
 // Update stats
 function updateStats() {
@@ -84,8 +130,16 @@ function renderBiens(biens) {
     if (biens.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="text-center" style="padding: 2rem; color: var(--text-light);">
-                    Aucun bien trouvé
+                <td colspan="7" class="text-center">
+                    <div class="empty-state">
+                        <i class="fas fa-home fa-3x"></i>
+                        <h3>Aucun bien trouvé</h3>
+                        <p>Commencez par ajouter votre premier bien immobilier</p>
+                        <button class="btn-primary" onclick="openModal('addBienModal')">
+                            <i class="fas fa-plus"></i>
+                            Ajouter un bien
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -94,25 +148,25 @@ function renderBiens(biens) {
     
     tbody.innerHTML = biens.map(bien => `
         <tr>
-            <td><strong>${bien.reference || '-'}</strong></td>
-            <td>${bien.type_bien || '-'}</td>
-            <td>${bien.adresse || '-'}</td>
-            <td>${bien.ville || '-'}</td>
-            <td><strong>${formatCurrency(bien.loyer_mensuel || 0)}</strong></td>
+            <td>${bien.titre}</td>
+            <td>${bien.type}</td>
+            <td>${bien.adresse}</td>
+            <td>${bien.ville}</td>
+            <td>${formatCurrency(bien.prix_location)}</td>
             <td>
-                <span class="status-badge ${(bien.statut || '').toLowerCase().replace('é', 'e')}">
-                    ${bien.statut || '-'}
+                <span class="status-badge status-${bien.statut.toLowerCase().replace(' ', '-')}">
+                    ${bien.statut}
                 </span>
             </td>
             <td>
                 <div class="action-buttons">
-                    <button class="btn-icon-sm btn-view" onclick="viewBien(${bien.id})" title="Voir">
+                    <button class="btn-icon btn-view" onclick="viewBien(${bien.id})" data-tooltip="Voir les détails">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn-icon-sm btn-edit" onclick="editBien(${bien.id})" title="Modifier">
+                    <button class="btn-icon btn-edit" onclick="editBien(${bien.id})" data-tooltip="Modifier">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-icon-sm btn-delete" onclick="deleteBien(${bien.id})" title="Supprimer">
+                    <button class="btn-icon btn-delete" onclick="deleteBien(${bien.id})" data-tooltip="Supprimer">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -121,95 +175,38 @@ function renderBiens(biens) {
     `).join('');
 }
 
-// Refresh biens
-function refreshBiens() {
-    loadBiens();
-    showToast('Liste actualisée', 'success');
-}
-
 // View bien details
 function viewBien(id) {
-    showToast('Fonctionnalité de visualisation en développement', 'info');
+    window.location.href = `bien-details.html?id=${id}`;
 }
 
 // Edit bien
-async function editBien(id) {
-    try {
-        const response = await API.getById('biens', id);
-        const bien = response.data;
-        
-        if (bien) {
-            // Fill form with bien data
-            document.getElementById('bienId').value = bien.id;
-            document.getElementById('type_bien').value = bien.type_bien || '';
-            document.getElementById('ville').value = bien.ville || '';
-            document.getElementById('adresse').value = bien.adresse || '';
-            document.getElementById('superficie').value = bien.superficie || '';
-            document.getElementById('nombre_pieces').value = bien.nombre_pieces || '';
-            document.getElementById('loyer_mensuel').value = bien.loyer_mensuel || '';
-            document.getElementById('statut').value = bien.statut || '';
-            document.getElementById('description').value = bien.description || '';
-            
-            // Update modal title
-            document.getElementById('modalTitle').textContent = 'Modifier un bien';
-            
-            // Open modal
-            openModal('addBienModal');
-        }
-    } catch (error) {
-        console.error('Error loading bien:', error);
-        showToast('Erreur lors du chargement du bien', 'error');
-    }
-}
-
-// Save bien (create or update)
-async function saveBien() {
-    const form = document.getElementById('bienForm');
-    const id = document.getElementById('bienId').value;
+function editBien(id) {
+    const bien = currentBiens.find(b => b.id == id);
+    if (!bien) return;
     
-    // Get form data
-    const bienData = {
-        type_bien: document.getElementById('type_bien').value,
-        ville: document.getElementById('ville').value,
-        adresse: document.getElementById('adresse').value,
-        superficie: document.getElementById('superficie').value,
-        nombre_pieces: document.getElementById('nombre_pieces').value,
-        loyer_mensuel: document.getElementById('loyer_mensuel').value,
-        statut: document.getElementById('statut').value,
-        description: document.getElementById('description').value
-    };
+    // Fill form with bien data
+    document.getElementById('bienId').value = bien.id;
+    document.getElementById('titre').value = bien.titre;
+    document.getElementById('type').value = bien.type;
+    document.getElementById('adresse').value = bien.adresse;
+    document.getElementById('ville').value = bien.ville;
+    document.getElementById('superficie').value = bien.superficie;
+    document.getElementById('chambres').value = bien.chambres;
+    document.getElementById('salles_bain').value = bien.salles_bain;
+    document.getElementById('prix_location').value = bien.prix_location;
+    document.getElementById('prix_achat').value = bien.prix_achat;
+    document.getElementById('description').value = bien.description;
+    document.getElementById('equipements').value = Array.isArray(bien.equipements) ? bien.equipements.join(', ') : bien.equipements;
+    document.getElementById('statut').value = bien.statut;
     
-    // Generate reference if creating new
-    if (!id) {
-        bienData.reference = generateReference('BIEN');
-    }
+    // Update modal title
+    document.getElementById('modalTitle').textContent = 'Modifier un bien';
     
-    try {
-        if (id) {
-            // Update existing bien
-            await API.update('biens', id, bienData);
-            showToast('Bien mis à jour avec succès', 'success');
-        } else {
-            // Create new bien
-            await API.create('biens', bienData);
-            showToast('Bien ajouté avec succès', 'success');
-        }
-        
-        // Close modal
-        closeModal('addBienModal');
-        
-        // Reset form
-        form.reset();
-        document.getElementById('bienId').value = '';
-        document.getElementById('modalTitle').textContent = 'Ajouter un bien';
-        
-        // Refresh biens
-        await loadBiens();
-        
-    } catch (error) {
-        console.error('Error saving bien:', error);
-        showToast('Erreur lors de l\'enregistrement du bien', 'error');
-    }
+    // Open modal
+    openModal('addBienModal');
+    
+    editingBienId = id;
 }
 
 // Delete bien
@@ -223,78 +220,101 @@ async function confirmDeleteBien() {
     const id = document.getElementById('deleteBienId').value;
     
     try {
-        await API.delete('biens', id);
+        await apiRequest(buildUrl('biens', id), {
+            method: 'DELETE'
+        });
+        
         showToast('Bien supprimé avec succès', 'success');
-        
-        // Close modal
         closeModal('deleteModal');
-        
-        // Refresh biens
         await loadBiens();
-        
     } catch (error) {
-        console.error('Error deleting bien:', error);
+        console.error('Erreur lors de la suppression:', error);
         showToast('Erreur lors de la suppression du bien', 'error');
     }
 }
 
-// Utility function for debouncing
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// Toast notification
-function showToast(message, type = 'info') {
-    const toastContainer = document.getElementById('toastContainer');
-    if (!toastContainer) return;
+// Handle form submission
+async function handleFormSubmit(e) {
+    e.preventDefault();
     
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
-        <span>${message}</span>
-        <button class="btn-close" onclick="this.parentElement.remove()">&times;</button>
-    `;
+    // Get form data
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
     
-    toastContainer.appendChild(toast);
-    
-    // Auto remove after 3 seconds
-    setTimeout(() => {
-        if (toast.parentElement) {
-            toast.remove();
-        }
-    }, 3000);
-}
-
-// Open modal
-function openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+    // Process equipements
+    if (data.equipements) {
+        data.equipements = data.equipements.split(',').map(item => item.trim()).filter(item => item);
     }
-}
-
-// Close modal
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
+    
+    // Convert numeric fields
+    const numericFields = ['superficie', 'chambres', 'salles_bain', 'prix_location', 'prix_achat'];
+    numericFields.forEach(field => {
+        if (data[field]) {
+            data[field] = Number(data[field]);
+        }
+    });
+    
+    try {
+        if (editingBienId) {
+            // Update existing bien
+            await apiRequest(buildUrl('biens', editingBienId), {
+                method: 'PUT',
+                body: JSON.stringify(data)
+            });
+            
+            showToast('Bien mis à jour avec succès', 'success');
+        } else {
+            // Create new bien
+            await apiRequest(buildUrl('biens'), {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            
+            showToast('Bien ajouté avec succès', 'success');
+        }
         
-        // Reset form if it's the add/edit modal
-        if (modalId === 'addBienModal') {
-            document.getElementById('bienForm').reset();
-            document.getElementById('bienId').value = '';
-            document.getElementById('modalTitle').textContent = 'Ajouter un bien';
-        }
+        // Reset form and close modal
+        e.target.reset();
+        closeModal('addBienModal');
+        
+        // Reload biens
+        await loadBiens();
+        
+        // Reset editing state
+        editingBienId = null;
+        document.getElementById('modalTitle').textContent = 'Ajouter un bien';
+    } catch (error) {
+        console.error('Erreur lors de l\'enregistrement:', error);
+        showToast('Erreur lors de l\'enregistrement du bien', 'error');
     }
+}
+
+// Cancel edit
+function cancelEdit() {
+    document.getElementById('bienForm').reset();
+    closeModal('addBienModal');
+    editingBienId = null;
+    document.getElementById('modalTitle').textContent = 'Ajouter un bien';
+}
+
+// Setup search functionality
+function setupSearch(inputId, tableId, columns) {
+    const searchInput = document.getElementById(inputId);
+    const table = document.getElementById(tableId);
+    
+    if (!searchInput || !table) return;
+    
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = table.querySelectorAll('tbody tr:not(.empty-state)');
+        
+        rows.forEach(row => {
+            const text = Array.from(row.cells)
+                .filter((cell, index) => columns.includes(index))
+                .map(cell => cell.textContent.toLowerCase())
+                .join(' ');
+            
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
 }

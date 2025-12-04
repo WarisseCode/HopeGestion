@@ -130,5 +130,42 @@
     <!-- Ajout de la configuration API avant les scripts -->
     <script src="js/api-config.js"></script>
     <script src="js/auth.js"></script>
+    
+    <script>
+        // Ajout d'un écouteur d'événements pour le formulaire de connexion
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    
+                    // Afficher un message de chargement
+                    showAlert('Connexion en cours...', 'info');
+                    
+                    try {
+                        // Utiliser la fonction de connexion de auth.js
+                        const success = await login(email, password);
+                        if (success) {
+                            // Redirection selon le rôle
+                            const user = getUserData();
+                            if (user) {
+                                if (user.role === 'locataire') {
+                                    window.location.href = 'portail-locataire.html';
+                                } else {
+                                    window.location.href = 'dashboard.html';
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Erreur de connexion:', error);
+                        showAlert('Erreur de connexion: ' + error.message, 'error');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
