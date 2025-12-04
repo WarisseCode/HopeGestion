@@ -470,7 +470,7 @@ window.apiRequest = async function(url, options = {}) {
         await new Promise(resolve => setTimeout(resolve, 300));
         
         // Extraire la table de l'URL pour la simulation
-        if (url && url.includes('/tables/')) {
+        if (url && typeof url === 'string' && url.includes('/tables/')) {
             const tableMatch = url.match(/\/tables\/([^\/\?]+)/);
             if (tableMatch && tableMatch[1]) {
                 const table = tableMatch[1];
@@ -491,6 +491,9 @@ window.apiRequest = async function(url, options = {}) {
                 // Retourner toutes les données de la table
                 return { data: window.SIMULATION_DATA[table] || [] };
             }
+        } else if (typeof url === 'string') {
+            // Si l'URL est une chaîne simple (nom de la table), retourner les données
+            return { data: window.SIMULATION_DATA[url] || [] };
         }
         
         // Par défaut, retourner des données vides

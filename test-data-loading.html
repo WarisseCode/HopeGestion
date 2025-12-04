@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Chargement des Données - Hope Gestion Immobilière</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <style>
+        .test-container {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            background: #259B24;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0.5rem;
+        }
+        button:hover {
+            background: #1e7e1d;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Test de Chargement des Données</h1>
+        <p>Cette page permet de tester le chargement des données en mode simulation.</p>
+        
+        <div class="test-section">
+            <h2>Configuration API</h2>
+            <div id="apiConfigResult" class="test-result loading">
+                Chargement de la configuration...
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test de Chargement des Biens</h2>
+            <button onclick="testLoadBiens()">Tester le chargement des biens</button>
+            <div id="biensResult" class="test-result loading">
+                Cliquez sur le bouton pour tester
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test de Chargement du Dashboard</h2>
+            <button onclick="testLoadDashboard()">Tester le chargement du dashboard</button>
+            <div id="dashboardResult" class="test-result loading">
+                Cliquez sur le bouton pour tester
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test de Connexion</h2>
+            <button onclick="testLogin()">Tester la connexion</button>
+            <div id="loginResult" class="test-result loading">
+                Cliquez sur le bouton pour tester
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/biens.js"></script>
+    
+    <script>
+        // Afficher la configuration API
+        document.addEventListener('DOMContentLoaded', function() {
+            const configResult = document.getElementById('apiConfigResult');
+            try {
+                configResult.innerHTML = `
+                    <h3>Configuration API :</h3>
+                    <pre>${JSON.stringify(window.API_CONFIG, null, 2)}</pre>
+                    <p><strong>Mode Simulation :</strong> ${window.API_CONFIG.SIMULATION_MODE ? 'Activé' : 'Désactivé'}</p>
+                    <p><strong>Données de simulation disponibles :</strong> ${window.SIMULATION_DATA ? 'Oui' : 'Non'}</p>
+                `;
+                configResult.className = 'test-result success';
+            } catch (error) {
+                configResult.innerHTML = `<p>Erreur : ${error.message}</p>`;
+                configResult.className = 'test-result error';
+            }
+        });
+        
+        // Test de chargement des biens
+        async function testLoadBiens() {
+            const resultDiv = document.getElementById('biensResult');
+            resultDiv.className = 'test-result loading';
+            resultDiv.innerHTML = '<p>Chargement des biens...</p>';
+            
+            try {
+                // Simuler le chargement
+                if (window.API_CONFIG.SIMULATION_MODE) {
+                    const demoBiens = getDemoBiens();
+                    resultDiv.innerHTML = `
+                        <h3>Données de biens chargées :</h3>
+                        <p>Nombre de biens : ${demoBiens.length}</p>
+                        <pre>${JSON.stringify(demoBiens, null, 2)}</pre>
+                    `;
+                    resultDiv.className = 'test-result success';
+                } else {
+                    resultDiv.innerHTML = '<p>Mode simulation désactivé. Impossible de tester sans backend.</p>';
+                    resultDiv.className = 'test-result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p>Erreur : ${error.message}</p>`;
+                resultDiv.className = 'test-result error';
+            }
+        }
+        
+        // Test de chargement du dashboard
+        async function testLoadDashboard() {
+            const resultDiv = document.getElementById('dashboardResult');
+            resultDiv.className = 'test-result loading';
+            resultDiv.innerHTML = '<p>Chargement des données du dashboard...</p>';
+            
+            try {
+                // Simuler le chargement
+                if (window.API_CONFIG.SIMULATION_MODE) {
+                    const demoData = getDemoDashboardData();
+                    resultDiv.innerHTML = `
+                        <h3>Données du dashboard chargées :</h3>
+                        <p>Biens : ${demoData.biens.length}</p>
+                        <p>Paiements : ${demoData.paiements.length}</p>
+                        <p>Tickets : ${demoData.tickets.length}</p>
+                        <pre>${JSON.stringify(demoData, null, 2)}</pre>
+                    `;
+                    resultDiv.className = 'test-result success';
+                } else {
+                    resultDiv.innerHTML = '<p>Mode simulation désactivé. Impossible de tester sans backend.</p>';
+                    resultDiv.className = 'test-result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p>Erreur : ${error.message}</p>`;
+                resultDiv.className = 'test-result error';
+            }
+        }
+        
+        // Test de connexion
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.className = 'test-result loading';
+            resultDiv.innerHTML = '<p>Test de connexion...</p>';
+            
+            try {
+                // Tester avec le compte admin de démonstration
+                const success = await login('admin@hopegimmo.bj', 'admin123');
+                if (success) {
+                    resultDiv.innerHTML = '<p>Connexion réussie avec le compte admin de démonstration !</p>';
+                    resultDiv.className = 'test-result success';
+                    
+                    // Déconnecter pour ne pas perturber la session
+                    setTimeout(() => {
+                        localStorage.removeItem('currentUser');
+                        localStorage.removeItem('isAuthenticated');
+                    }, 1000);
+                } else {
+                    resultDiv.innerHTML = '<p>Échec de la connexion.</p>';
+                    resultDiv.className = 'test-result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p>Erreur : ${error.message}</p>`;
+                resultDiv.className = 'test-result error';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -187,9 +187,20 @@ function setupTabs() {
             
             // Ajouter la classe active au bouton cliqué et au panneau correspondant
             this.classList.add('active');
-            document.getElementById(`${tabId}-tab`).classList.add('active');
+            const targetPane = document.getElementById(`${tabId}-tab`);
+            if (targetPane) {
+                targetPane.classList.add('active');
+            }
         });
     });
+    
+    // Activer le premier onglet par défaut s'il n'y en a aucun d'actif
+    if (!document.querySelector('.tab-btn.active')) {
+        const firstButton = document.querySelector('.tab-btn');
+        if (firstButton) {
+            firstButton.click();
+        }
+    }
 }
 
 // Configurer les écouteurs d'événements

@@ -18,7 +18,7 @@ const formatDate = (dateString) => {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
-    }).format(date);
+        }).format(date);
 };
 
 const formatShortDate = (dateString) => {
@@ -266,232 +266,41 @@ document.addEventListener('click', (e) => {
 
 // Toast Notifications
 function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) return;
+    
     const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    
-    const icon = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    }[type] || 'fa-info-circle';
-    
+    toast.className = `toast toast-${type} show`;
     toast.innerHTML = `
-        <i class="fas ${icon}"></i>
-        <span>${message}</span>
+        <div class="toast-icon">
+            <i class="fas fa-${getTypeIcon(type)}"></i>
+        </div>
+        <div class="toast-content">${message}</div>
+        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
     `;
     
-    document.body.appendChild(toast);
+    toastContainer.appendChild(toast);
     
+    // Supprimer automatiquement après 5 secondes
     setTimeout(() => {
-        toast.classList.add('show');
-    }, 100);
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-            document.body.removeChild(toast);
-        }, 300);
-    }, 3000);
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 5000);
 }
 
-// Confirm Dialog
-function confirmAction(message, onConfirm) {
-    const overlay = document.createElement('div');
-    overlay.className = 'confirm-overlay';
-    
-    const dialog = document.createElement('div');
-    dialog.className = 'confirm-dialog';
-    dialog.innerHTML = `
-        <div class="confirm-header">
-            <i class="fas fa-exclamation-triangle"></i>
-            <h3>Confirmation</h3>
-        </div>
-        <p>${message}</p>
-        <div class="confirm-actions">
-            <button class="btn-cancel" onclick="this.closest('.confirm-overlay').remove()">Annuler</button>
-            <button class="btn-confirm" id="confirmBtn">Confirmer</button>
-        </div>
-    `;
-    
-    overlay.appendChild(dialog);
-    document.body.appendChild(overlay);
-    
-    document.getElementById('confirmBtn').addEventListener('click', () => {
-        onConfirm();
-        overlay.remove();
-    });
+// Obtenir l'icône selon le type de toast
+function getTypeIcon(type) {
+    switch (type) {
+        case 'success': return 'check-circle';
+        case 'error': return 'exclamation-circle';
+        case 'warning': return 'exclamation-triangle';
+        case 'info': return 'info-circle';
+        default: return 'info-circle';
+    }
 }
 
 // Loading Spinner
-function showLoading(container) {
-    const spinner = document.createElement('div');
-    spinner.className = 'loading-spinner';
-    spinner.innerHTML = `
-        <div class="spinner"></div>
-        <p>Chargement...</p>
-    `;
-    container.appendChild(spinner);
-}
-
-function hideLoading(container) {
-    const spinner = container.querySelector('.loading-spinner');
-    if (spinner) {
-        spinner.remove();
-    }
-}
-
-// Export to PDF (placeholder - requires jsPDF library)
-function exportToPDF(elementId, filename) {
-    showToast('Génération du PDF en cours...', 'info');
-    // In production, implement with jsPDF library
-    setTimeout(() => {
-        showToast('PDF généré avec succès!', 'success');
-    }, 1500);
-}
-
-// Export to Excel (placeholder - requires SheetJS library)
-function exportToExcel(data, filename) {
-    showToast('Génération du fichier Excel en cours...', 'info');
-    // In production, implement with SheetJS library
-    setTimeout(() => {
-        showToast('Fichier Excel généré avec succès!', 'success');
-    }, 1500);
-}
-
-// Print function
-function printElement(elementId) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        const printWindow = window.open('', '', 'height=600,width=800');
-        printWindow.document.write('<html><head><title>Impression</title>');
-        printWindow.document.write('<link rel="stylesheet" href="css/style.css">');
-        printWindow.document.write('<link rel="stylesheet" href="css/dashboard.css">');
-        printWindow.document.write('</head><body>');
-        printWindow.document.write(element.innerHTML);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        printWindow.print();
-    }
-}
-
-// Form validation
-function validateForm(formId) {
-    const form = document.getElementById(formId);
-    if (!form) return false;
-    
-    const requiredFields = form.querySelectorAll('[required]');
-    let isValid = true;
-    
-    requiredFields.forEach(field => {
-        if (!field.value.trim()) {
-            field.classList.add('error');
-            isValid = false;
-        } else {
-            field.classList.remove('error');
-        }
-    });
-    
-    if (!isValid) {
-        showToast('Veuillez remplir tous les champs obligatoires', 'error');
-    }
-    
-    return isValid;
-}
-
-// Search functionality
-function setupSearch(inputId, tableId, columns) {
-    const searchInput = document.getElementById(inputId);
-    const table = document.getElementById(tableId);
-    
-    if (!searchInput || !table) return;
-    
-    searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const rows = table.querySelectorAll('tbody tr');
-        
-        rows.forEach(row => {
-            const text = Array.from(row.cells)
-                .filter((cell, index) => columns.includes(index))
-                .map(cell => cell.textContent.toLowerCase())
-                .join(' ');
-            
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
-    });
-}
-
-// Pagination
-function setupPagination(tableId, itemsPerPage = 10) {
-    const table = document.getElementById(tableId);
-    if (!table) return;
-    
-    const rows = Array.from(table.querySelectorAll('tbody tr'));
-    let currentPage = 1;
-    const totalPages = Math.ceil(rows.length / itemsPerPage);
-    
-    function showPage(page) {
-        const start = (page - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        
-        rows.forEach((row, index) => {
-            row.style.display = (index >= start && index < end) ? '' : 'none';
-        });
-        
-        currentPage = page;
-        updatePaginationButtons();
-    }
-    
-    function updatePaginationButtons() {
-        const paginationContainer = document.getElementById('pagination');
-        if (!paginationContainer) return;
-        
-        paginationContainer.innerHTML = `
-            <button ${currentPage === 1 ? 'disabled' : ''} onclick="showPage(${currentPage - 1})">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <span>Page ${currentPage} sur ${totalPages}</span>
-            <button ${currentPage === totalPages ? 'disabled' : ''} onclick="showPage(${currentPage + 1})">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        `;
-    }
-    
-    showPage(1);
-    window.showPage = showPage;
-}
-
-// Initialize tooltips
-function initTooltips() {
-    const tooltips = document.querySelectorAll('[data-tooltip]');
-    
-    tooltips.forEach(element => {
-        element.addEventListener('mouseenter', (e) => {
-            const tooltip = document.createElement('div');
-            tooltip.className = 'tooltip';
-            tooltip.textContent = e.target.dataset.tooltip;
-            document.body.appendChild(tooltip);
-            
-            const rect = e.target.getBoundingClientRect();
-            tooltip.style.top = `${rect.top - tooltip.offsetHeight - 5}px`;
-            tooltip.style.left = `${rect.left + rect.width / 2 - tooltip.offsetWidth / 2}px`;
-        });
-        
-        element.addEventListener('mouseleave', () => {
-            const tooltip = document.querySelector('.tooltip');
-            if (tooltip) tooltip.remove();
-        });
-    });
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
-    initTooltips();
-});
-
-// Fonctions utilitaires globales
-
-// Afficher le spinner de chargement
 function showLoadingSpinner(elementId) {
     const element = document.getElementById(elementId);
     if (element) {
@@ -558,60 +367,6 @@ function formatCurrency(amount) {
 function formatPercentage(value) {
     if (value === null || value === undefined) return '-';
     return `${value}%`;
-}
-
-// Ouvrir un modal
-function openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-// Fermer un modal
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('active');
-        document.body.style.overflow = 'auto';
-    }
-}
-
-// Afficher un toast
-function showToast(message, type = 'info') {
-    const toastContainer = document.getElementById('toastContainer');
-    if (!toastContainer) return;
-    
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type} show`;
-    toast.innerHTML = `
-        <div class="toast-icon">
-            <i class="fas fa-${getTypeIcon(type)}"></i>
-        </div>
-        <div class="toast-content">${message}</div>
-        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
-    `;
-    
-    toastContainer.appendChild(toast);
-    
-    // Supprimer automatiquement après 5 secondes
-    setTimeout(() => {
-        if (toast.parentElement) {
-            toast.remove();
-        }
-    }, 5000);
-}
-
-// Obtenir l'icône selon le type de toast
-function getTypeIcon(type) {
-    switch (type) {
-        case 'success': return 'check-circle';
-        case 'error': return 'exclamation-circle';
-        case 'warning': return 'exclamation-triangle';
-        case 'info': return 'info-circle';
-        default: return 'info-circle';
-    }
 }
 
 // Initialiser la protection des pages

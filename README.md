@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Bénin](https://img.shields.io/badge/Made%20in-Bénin-red.svg)
 
-Hope Gestion Immobilière est une plateforme web moderne et professionnelle de gestion immobilière, spécialement adaptée au contexte béninois. Elle permet aux propriétaires, gestionnaires et locataires de gérer l'ensemble du cycle de vie locatif de manière digitale et automatisée.
+Hope Gestion Immobilier est une plateforme web moderne et professionnelle de gestion immobilière, spécialement adaptée au contexte béninois. Elle permet aux propriétaires, gestionnaires et locataires de gérer l'ensemble du cycle de vie locatif de manière digitale et automatisée.
 
 ---
 
@@ -81,11 +81,26 @@ Développer en 12 semaines un MVP (Minimum Viable Product) fonctionnel intégran
 - [x] Suivi des coûts de réparation
 - [x] Photos du problème
 
+### ✅ Module Documents
+- [x] Gestion centralisée des documents
+- [x] Types : Contrats, Factures, Photos, Autres
+- [x] Association aux biens
+- [x] Tags et descriptions
+- [x] Téléchargement
+
 ### ✅ Module Notifications
 - [x] Notifications en temps réel
 - [x] Types : Paiement, Ticket, Bail, Système
 - [x] Statut lu/non lu
 - [x] Historique des notifications
+- [x] Centre de notifications
+
+### ✅ Module Paramètres
+- [x] Configuration système
+- [x] Gestion des utilisateurs
+- [x] Préférences de notification
+- [x] Paramètres de paiement
+- [x] Sécurité et mots de passe
 
 ### ✅ Dashboard & Statistiques
 - [x] Vue d'ensemble en temps réel
@@ -116,6 +131,7 @@ Développer en 12 semaines un MVP (Minimum Viable Product) fonctionnel intégran
 - [x] Animations fluides
 - [x] Icônes Font Awesome
 - [x] Police Google Fonts (Inter, Poppins)
+- [x] Interface harmonisée avec onglets et boutons stylisés
 
 ---
 
@@ -144,7 +160,10 @@ Développer en 12 semaines un MVP (Minimum Viable Product) fonctionnel intégran
 7. **tickets** - Système de maintenance (14 champs)
    - Plaintes, priorités, workflow
 
-8. **notifications** - Système de notifications (7 champs)
+8. **documents** - Gestion documentaire (8 champs)
+   - Fichiers, types, associations
+
+9. **notifications** - Système de notifications (7 champs)
    - Alertes, messages, statuts
 
 ---
@@ -170,7 +189,9 @@ Hope-Gestion-Immobiliere/
 ├── js/
 │   ├── main.js                # Fonctions utilitaires
 │   ├── auth.js                # Gestion authentification
+│   ├── api-config.js          # Configuration API
 │   ├── dashboard.js           # Logique dashboard
+│   ├── biens.js               # Logique biens
 │   ├── proprietaires.js       # Logique propriétaires
 │   ├── locataires.js          # Logique locataires
 │   ├── baux.js                # Logique baux
@@ -497,6 +518,8 @@ Pour tester la plateforme, utilisez ces comptes :
 - ✅ Affichage des données
 - ✅ Responsiveness mobile
 - ✅ Comptes de démonstration
+- ✅ Chargement des données en mode simulation
+- ✅ Interface harmonisée avec onglets et boutons stylisés
 
 ### Tests à Implémenter
 
@@ -554,18 +577,24 @@ Aucune installation nécessaire ! La plateforme fonctionne entièrement en front
 
 #### Ajouté
 - ✅ Système d'authentification complet
-- ✅ 8 tables de base de données
+- ✅ 9 tables de base de données
 - ✅ Dashboard avec KPIs et graphiques
 - ✅ Module de gestion des biens
 - ✅ Module de gestion des locataires
 - ✅ Module de gestion des propriétaires
 - ✅ Système de paiements en FCFA
 - ✅ Système de tickets/maintenance
+- ✅ Module de gestion documentaire
+- ✅ Module de notifications
+- ✅ Module de paramètres
 - ✅ Portail locataire
 - ✅ Design responsive et moderne
 - ✅ Données de démonstration
 - ✅ Pages de gestion complètes (14 pages)
 - ✅ Données de démonstration étendues
+- ✅ Interface harmonisée avec onglets et boutons stylisés
+- ✅ Mode simulation pour le développement
+- ✅ Tests de chargement des données
 
 #### En Cours
 - 🔄 Intégration Mobile Money

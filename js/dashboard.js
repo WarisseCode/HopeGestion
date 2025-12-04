@@ -45,6 +45,13 @@ async function loadDashboardData() {
         // Attendre un court délai pour s'assurer que les spinners sont visibles
         await new Promise(resolve => setTimeout(resolve, 100));
         
+        // En mode simulation, utiliser les données simulées directement
+        if (window.API_CONFIG && window.API_CONFIG.SIMULATION_MODE) {
+            const demoData = getDemoDashboardData();
+            renderDashboardData(demoData);
+            return;
+        }
+        
         // Charger toutes les données en parallèle
         const [biensResponse, paiementsResponse, ticketsResponse] = await Promise.all([
             apiRequest(buildUrl('biens')),

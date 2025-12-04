@@ -242,8 +242,8 @@ let currentUsers = [];
 async function loadUsers() {
     try {
         // En mode simulation, utiliser les données simulées
-        if (window.API_CONFIG.SIMULATION_MODE) {
-            currentUsers = window.SIMULATION_DATA.users || [];
+        if (window.API_CONFIG && window.API_CONFIG.SIMULATION_MODE) {
+            currentUsers = window.SIMULATION_DATA ? window.SIMULATION_DATA.users || [] : [];
             return currentUsers;
         }
         
@@ -254,7 +254,7 @@ async function loadUsers() {
         console.error('Erreur:', error);
         showToast('Erreur lors du chargement des utilisateurs', 'error');
         // En mode simulation en cas d'erreur
-        currentUsers = window.SIMULATION_DATA.users || [];
+        currentUsers = window.SIMULATION_DATA ? window.SIMULATION_DATA.users || [] : [];
         return currentUsers;
     }
 }
@@ -266,7 +266,7 @@ async function login(email, password) {
         showAlert('Connexion en cours...', 'info');
         
         // En mode simulation, vérifier les identifiants dans les données simulées
-        if (window.API_CONFIG.SIMULATION_MODE) {
+        if (window.API_CONFIG && window.API_CONFIG.SIMULATION_MODE) {
             // Utiliser les comptes de démonstration
             if (email === 'admin@hopegimmo.bj' && password === 'admin123') {
                 const userData = {

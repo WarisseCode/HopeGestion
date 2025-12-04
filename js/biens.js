@@ -40,6 +40,14 @@ async function loadBiens() {
         // Attendre un court délai pour s'assurer que les spinners sont visibles
         await new Promise(resolve => setTimeout(resolve, 100));
         
+        // En mode simulation, utiliser les données simulées directement
+        if (window.API_CONFIG && window.API_CONFIG.SIMULATION_MODE) {
+            currentBiens = getDemoBiens();
+            renderBiens(currentBiens);
+            updateStats();
+            return;
+        }
+        
         const response = await apiRequest(buildUrl('biens'));
         const biens = response.data || response;
         
